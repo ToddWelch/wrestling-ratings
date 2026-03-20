@@ -244,9 +244,16 @@ export default function App() {
         <h1 style={{ margin: 0, fontSize: 21, fontWeight: 800, color: "#e8f5ee", letterSpacing: "-0.02em" }}>
           <span style={{ color: "#4ade80" }}>Pro Wrestling</span> TV Ratings Tracker
         </h1>
-        <p style={{ margin: "4px 0 0", fontSize: 14, color: "#8acca0", fontFamily: "monospace", letterSpacing: "0.1em" }}>
-          WEEKLY VIEWERSHIP FOR WWE, AEW, TNA, ROH, AND NWA &bull; UPDATED EVERY WEEK &bull; NIELSEN + STREAMING
-        </p>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 8, margin: "4px 0 0" }}>
+          <p style={{ margin: 0, fontSize: 14, color: "#8acca0", fontFamily: "monospace", letterSpacing: "0.1em" }}>
+            WEEKLY VIEWERSHIP FOR WWE, AEW, TNA, ROH, AND NWA &bull; NIELSEN + STREAMING
+          </p>
+          {lastUpdated && (
+            <span style={{ fontSize: 12, color: "#6a9a7a", fontFamily: "monospace" }}>
+              Last updated: {fmtDate(new Date(lastUpdated))}
+            </span>
+          )}
+        </div>
 
         {/* Metric + Range */}
         <div style={{ display: "flex", gap: 16, marginTop: 12, flexWrap: "wrap", alignItems: "center" }}>
