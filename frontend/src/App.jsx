@@ -318,7 +318,7 @@ export default function App() {
         </ResponsiveContainer>
 
         {/* Data source notes */}
-        <div style={{ marginTop: 8, padding: "10px 12px", background: "#0c1812", border: "1px solid #1a3a2a", borderRadius: 3, fontSize: 12, color: "#6a9a7a", fontFamily: "monospace", lineHeight: 1.7 }}>
+        <div style={{ marginTop: 8, padding: "10px 12px", background: "#0c1812", border: "1px solid #1a3a2a", borderRadius: 3, fontSize: 14, color: "#6a9a7a", fontFamily: "monospace", lineHeight: 1.7 }}>
           <span style={{ color: "#DC2626", fontWeight: 700 }}>WWE Raw:</span> Netflix global views (millions). Not a Nielsen metric.
           <br /><span style={{ color: "#F97316", fontWeight: 700 }}>ROH:</span> Airs on HonorClub (Thu) and YouTube (Fri). YouTube view counts tracked when available.
           <br /><span style={{ color: "#06B6D4", fontWeight: 700 }}>NWA Powerrr:</span> Moved to Roku Channel (Jul 2025). YouTube clips/episodes tracked when posted. No Roku viewership data is publicly reported.
@@ -331,7 +331,7 @@ export default function App() {
         <h2 style={{ margin: "0 0 8px", fontSize: 16, fontWeight: 700, color: "#e8f5ee" }}>
           About Pro Wrestling TV Ratings
         </h2>
-        <div style={{ fontSize: 13, color: "#6a9a7a", lineHeight: 1.7, maxWidth: 800 }}>
+        <div style={{ fontSize: 15, color: "#6a9a7a", lineHeight: 1.7, maxWidth: 800 }}>
           <p style={{ margin: "0 0 10px" }}>
             This tracker provides weekly television ratings and viewership data for all major professional wrestling programs in the United States, including WWE SmackDown, WWE NXT, AEW Dynamite, AEW Collision, TNA iMPACT, WWE Raw on Netflix, Ring of Honor (ROH), and NWA Powerrr.
           </p>
@@ -362,8 +362,8 @@ export default function App() {
             { name: "NWA Powerrr", day: "Tuesday", net: "Roku Channel", time: "8:00 PM ET" },
           ].map((s, i) => (
             <div key={i} style={{ background: "#0c1812", border: "1px solid #1a3a2a", borderRadius: 3, padding: "8px 10px" }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#8acca0" }}>{s.name}</div>
-              <div style={{ fontSize: 12, color: "#6a9a7a", marginTop: 2 }}>{s.day} &bull; {s.net} &bull; {s.time}</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: "#8acca0" }}>{s.name}</div>
+              <div style={{ fontSize: 14, color: "#6a9a7a", marginTop: 2 }}>{s.day} &bull; {s.net} &bull; {s.time}</div>
             </div>
           ))}
         </div>
@@ -374,86 +374,86 @@ export default function App() {
         <h2 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 700, color: "#e8f5ee" }}>
           How This Website Works
         </h2>
-        <div style={{ fontSize: 13, color: "#6a9a7a", lineHeight: 1.7, maxWidth: 800 }}>
-          <p style={{ margin: "0 0 10px" }}>
-            This application was designed and built entirely by AI (Claude Code) and is a showcase of what modern AI-assisted development can produce. Here is how it works under the hood.
-          </p>
-        </div>
 
         <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 12 }}>
 
           {/* Architecture */}
           <div style={{ background: "#0c1812", border: "1px solid #1a3a2a", borderRadius: 3, padding: "12px 14px" }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#4ade80", marginBottom: 6, fontFamily: "monospace" }}>ARCHITECTURE</div>
-            <div style={{ fontSize: 13, color: "#6a9a7a", lineHeight: 1.7 }}>
-              Flask (Python) backend serving a React single-page application built with Vite. The frontend uses Recharts for interactive time-series charting with a time-scaled x-axis. All data is served via a JSON REST API. Deployed on Railway with Docker multi-stage builds.
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#4ade80", marginBottom: 6, fontFamily: "monospace" }}>ARCHITECTURE</div>
+            <div style={{ fontSize: 15, color: "#6a9a7a", lineHeight: 1.7 }}>
+              This is a full-stack single-page application built with a Python/Flask backend and a React frontend bundled with Vite. Flask serves both the REST API and the static production build as a single process. No database is needed. Ratings data is stored in a single JSON file that the scrapers update and the API serves directly.
             </div>
           </div>
 
           {/* Data Pipeline */}
           <div style={{ background: "#0c1812", border: "1px solid #1a3a2a", borderRadius: 3, padding: "12px 14px" }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#4ade80", marginBottom: 6, fontFamily: "monospace" }}>DATA PIPELINE</div>
-            <div style={{ fontSize: 13, color: "#6a9a7a", lineHeight: 1.7 }}>
-              Three independent web scrapers run on a scheduled cycle. The primary source is WrestlingAttitude.com, with Wrestlenomics and Wrestling Inc as backups. A reconciliation engine cross-references all three: if two sources agree on a number, it uses their average. Gaps in one source are filled by the others.
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#4ade80", marginBottom: 6, fontFamily: "monospace" }}>LIVE DATA PIPELINE</div>
+            <div style={{ fontSize: 15, color: "#6a9a7a", lineHeight: 1.7 }}>
+              Ratings update automatically through a multi-source data pipeline with built-in redundancy. Primary: WrestlingAttitude.com, parsed with BeautifulSoup. Backup: Wrestlenomics, with viewership data extracted directly from article URL slugs. Fallback: Wrestling Inc individual article scraping. Safety net: existing data is never overwritten with fewer entries. An APScheduler cron runs the full pipeline every 6 hours. The frontend polls the API every 10 minutes and re-renders when new data arrives.
             </div>
           </div>
 
-          {/* Scraping */}
+          {/* Reconciliation */}
           <div style={{ background: "#0c1812", border: "1px solid #1a3a2a", borderRadius: 3, padding: "12px 14px" }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#4ade80", marginBottom: 6, fontFamily: "monospace" }}>WEB SCRAPING</div>
-            <div style={{ fontSize: 13, color: "#6a9a7a", lineHeight: 1.7 }}>
-              Nielsen TV data is parsed from publicly available wrestling news sites using BeautifulSoup and regex pattern matching. The Wrestlenomics scraper uniquely extracts viewership and demo data directly from article URL slugs. WWE Raw Netflix data and YouTube view counts for ROH/NWA are collected separately.
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#4ade80", marginBottom: 6, fontFamily: "monospace" }}>DATA RECONCILIATION</div>
+            <div style={{ fontSize: 15, color: "#6a9a7a", lineHeight: 1.7 }}>
+              A reconciliation engine cross-references all three data sources for every show and date. If two out of three sources agree on a viewership number (within 5% tolerance), their average is used. If only one source has data for a given week, that value fills the gap. This provides both accuracy through consensus and coverage through redundancy.
             </div>
           </div>
 
-          {/* Data Integrity */}
+          {/* Charts */}
           <div style={{ background: "#0c1812", border: "1px solid #1a3a2a", borderRadius: 3, padding: "12px 14px" }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#4ade80", marginBottom: 6, fontFamily: "monospace" }}>DATA INTEGRITY</div>
-            <div style={{ fontSize: 13, color: "#6a9a7a", lineHeight: 1.7 }}>
-              The system never overwrites existing data with fewer entries. If a scrape fails, existing data is preserved. Scrape status is tracked per source. The multi-source reconciliation provides accuracy through consensus and coverage through redundancy.
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#4ade80", marginBottom: 6, fontFamily: "monospace" }}>CHART RENDERING</div>
+            <div style={{ fontSize: 15, color: "#6a9a7a", lineHeight: 1.7 }}>
+              Charts are rendered with Recharts using a true time-scaled x-axis so that months are always proportionally spaced regardless of how many data points exist. All shows are grouped by week (normalized to Monday) regardless of their actual air day. The x-axis switches between weekly labels (1M/3M) and monthly labels (6M/1Y/ALL) based on the selected range.
             </div>
           </div>
 
-          {/* Frontend */}
+          {/* Interaction */}
           <div style={{ background: "#0c1812", border: "1px solid #1a3a2a", borderRadius: 3, padding: "12px 14px" }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#4ade80", marginBottom: 6, fontFamily: "monospace" }}>INTERACTIVE CHARTS</div>
-            <div style={{ fontSize: 13, color: "#6a9a7a", lineHeight: 1.7 }}>
-              Built with React and Recharts. The x-axis uses true time-scaled positioning so months are always evenly spaced. All shows are grouped by week regardless of air day. The chart supports metric toggling (viewers vs. key demo), five time range presets, and per-show visibility toggles.
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#4ade80", marginBottom: 6, fontFamily: "monospace" }}>INTERACTION</div>
+            <div style={{ fontSize: 15, color: "#6a9a7a", lineHeight: 1.7 }}>
+              Toggle between Total Viewers and 18-49 Key Demo metrics, which switches the y-axis scale and data series. Five time range presets (1M, 3M, 6M, 1Y, ALL) filter the data window. Individual show lines can be toggled on and off. Hovering shows a tooltip with exact values for all visible shows on that date.
             </div>
           </div>
 
-          {/* SEO */}
+          {/* Deployment */}
           <div style={{ background: "#0c1812", border: "1px solid #1a3a2a", borderRadius: 3, padding: "12px 14px" }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#4ade80", marginBottom: 6, fontFamily: "monospace" }}>SEO + DEPLOYMENT</div>
-            <div style={{ fontSize: 13, color: "#6a9a7a", lineHeight: 1.7 }}>
-              Server-rendered HTML shell with Open Graph meta tags, JSON-LD structured data, and a dynamic sitemap.xml. The SEO content section renders on initial page load for crawler visibility. Deployed via Docker on Railway with automatic SSL and health check monitoring.
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#4ade80", marginBottom: 6, fontFamily: "monospace" }}>DEPLOYMENT</div>
+            <div style={{ fontSize: 15, color: "#6a9a7a", lineHeight: 1.7 }}>
+              The app is containerized in a multi-stage Docker build: Node 20 compiles the React frontend, then Python 3.11 serves it via Gunicorn. Deployed on Railway with automatic deploys from the main branch. Health checks hit /api/health. SEO is handled with a server-rendered HTML shell containing Open Graph meta tags, JSON-LD structured data, and a dynamic sitemap.xml.
             </div>
           </div>
 
         </div>
 
-        {/* Tech stack badges + source link */}
+        {/* Tech stack badges */}
         <div style={{ marginTop: 14, display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
-          {["Python", "Flask", "React", "Vite", "Recharts", "BeautifulSoup", "APScheduler", "Docker", "Railway"].map((tech) => (
+          {["Python 3.11", "Flask", "Gunicorn", "APScheduler", "BeautifulSoup", "React 18", "Vite", "Recharts", "Docker", "Railway"].map((tech) => (
             <span key={tech} style={{
-              fontSize: 12, fontWeight: 700, fontFamily: "monospace",
-              padding: "1px 5px", borderRadius: 2,
+              fontSize: 13, fontWeight: 700, fontFamily: "monospace",
+              padding: "2px 6px", borderRadius: 2,
               color: "#4ade80", background: "#4ade8044", border: "1px solid #4ade8025",
             }}>{tech}</span>
           ))}
+        </div>
+
+        {/* Open Source */}
+        <div style={{ marginTop: 12, fontSize: 15, color: "#6a9a7a", lineHeight: 1.7 }}>
+          <span style={{ fontWeight: 700, color: "#8acca0" }}>Open Source</span>
+          {" "}The full source code is available at{" "}
           <a href="https://github.com/ToddWelch/wrestling-ratings" target="_blank" rel="noopener noreferrer"
-            style={{ fontSize: 12, fontWeight: 700, fontFamily: "monospace", padding: "1px 5px", borderRadius: 2,
-              color: "#8acca0", background: "#8acca022", border: "1px solid #8acca025", textDecoration: "none",
-            }}>View Source on GitHub</a>
+            style={{ color: "#8acca0", textDecoration: "none", borderBottom: "1px dashed #8acca044" }}>
+            github.com/ToddWelch/wrestling-ratings</a>.
         </div>
       </section>
 
       {/* === DATA SOURCE FOOTER === */}
       <div style={{ borderTop: "1px solid #1a3a2a", padding: "12px 20px", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8, background: "#0a1610" }}>
-        <span style={{ fontSize: 12, color: "#6a9a7a", fontFamily: "monospace" }}>
+        <span style={{ fontSize: 13, color: "#6a9a7a", fontFamily: "monospace" }}>
           Data: wrestlingattitude.com &bull; Netflix &bull; YouTube API &bull; Updated weekly
         </span>
-        <span style={{ fontSize: 12, color: "#6a9a7a", fontFamily: "monospace" }}>
+        <span style={{ fontSize: 13, color: "#6a9a7a", fontFamily: "monospace" }}>
           wrestlingratings.welchcommercesystems.com
         </span>
       </div>
