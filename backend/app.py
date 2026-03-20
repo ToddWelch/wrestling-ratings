@@ -31,12 +31,20 @@ def load_ratings():
 @app.route("/api/ratings")
 def api_ratings():
     data = load_ratings()
+    from scrape_status import get_status
+    data["scrapeDetails"] = get_status()
     return jsonify(data)
 
 
 @app.route("/api/health")
 def api_health():
     return jsonify({"status": "ok"})
+
+
+@app.route("/api/scrape-status")
+def api_scrape_status():
+    from scrape_status import get_status
+    return jsonify(get_status())
 
 
 @app.route("/api/scrape", methods=["POST"])

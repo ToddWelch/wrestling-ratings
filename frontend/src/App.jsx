@@ -24,6 +24,17 @@ const STREAMING_SHOWS = [
 /* ======= HELPERS ======= */
 const MO = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
+function fmtTimeAgo(date) {
+  const s = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (s < 60) return "just now";
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  return `${d}d ago`;
+}
+
 function fmtDate(v) {
   const d = typeof v === "number" ? new Date(v) : new Date(v + "T00:00:00");
   return `${MO[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
@@ -170,6 +181,7 @@ export default function App() {
   const [nielsenData, setNielsenData] = useState([]);
   const [streamingData, setStreamingData] = useState([]);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [scrapeDetails, setScrapeDetails] = useState({});
 
   const toggle = (id) => setShows((p) => ({ ...p, [id]: !p[id] }));
 
@@ -182,6 +194,7 @@ export default function App() {
         setNielsenData(transformNielsen(data.nielsen, data.streaming));
         setStreamingData(transformStreaming(data.streaming));
         setLastUpdated(data.lastUpdated);
+        if (data.scrapeDetails) setScrapeDetails(data.scrapeDetails);
       }
     } catch (e) {
       console.error("Failed to fetch ratings:", e);
@@ -474,6 +487,46 @@ export default function App() {
             github.com/ToddWelch/wrestling-ratings</a>.
         </div>
       </section>
+
+      {/* === SCRAPE STATUS === */}
+      {Object.keys(scrapeDetails).length > 0 && (
+        <div style={{ borderTop: "1px solid #1a3a2a", padding: "14px 20px", background: "#0a1610" }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "#8acca0", marginBottom: 8, fontFamily: "monospace", letterSpacing: "0.08em" }}>DATA SOURCE STATUS</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))", gap: 8 }}>
+            {[
+              { key: "wrestlingattitude", label: "WrestlingAttitude" },
+              { key: "wrestlenomics", label: "Wrestlenomics" },
+              { key: "wrestlinginc", label: "Wrestling Inc" },
+              { key: "youtube", label: "YouTube API" },
+            ].map(({ key, label }) => {
+              const info = scrapeDetails[key];
+              if (!info) return (
+                <div key={key} style={{ background: "#0c1812", border: "1px solid #1a3a2a", borderRadius: 3, padding: "8px 10px" }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#6a9a7a" }}>{label}</div>
+                  <div style={{ fontSize: 12, color: "#3e6e4e", fontFamily: "monospace", marginTop: 2 }}>No data yet</div>
+                </div>
+              );
+              const ok = info.status === "success";
+              const date = info.lastScrape ? new Date(info.lastScrape) : null;
+              const ago = date ? fmtTimeAgo(date) : "never";
+              return (
+                <div key={key} style={{ background: "#0c1812", border: `1px solid ${ok ? "#1a3a2a" : "#5a2020"}`, borderRadius: 3, padding: "8px 10px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: ok ? "#8acca0" : "#EF4444" }}>{label}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, fontFamily: "monospace", color: ok ? "#22C55E" : "#EF4444" }}>
+                      {ok ? "OK" : "FAILED"}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 12, color: "#6a9a7a", fontFamily: "monospace", marginTop: 2 }}>
+                    {ago}{info.entriesFound > 0 ? ` \u00B7 ${info.entriesFound} entries` : ""}
+                  </div>
+                  {info.error && <div style={{ fontSize: 12, color: "#EF4444", fontFamily: "monospace", marginTop: 2 }}>{info.error}</div>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* === DATA SOURCE FOOTER === */}
       <div style={{ borderTop: "1px solid #1a3a2a", padding: "12px 20px", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8, background: "#0a1610" }}>
