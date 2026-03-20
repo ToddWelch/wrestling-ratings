@@ -36,7 +36,7 @@ function fmtTimeAgo(date) {
 }
 
 function fmtDate(v) {
-  const d = typeof v === "number" ? new Date(v) : new Date(v + "T00:00:00");
+  const d = v instanceof Date ? v : typeof v === "number" ? new Date(v) : new Date(v + "T00:00:00");
   return `${MO[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
 }
 
