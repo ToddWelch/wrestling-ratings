@@ -1,43 +1,32 @@
 import os
+import json
 import logging
-import smtplib
-from email.mime.text import MIMEText
+import requests
 from apscheduler.schedulers.background import BackgroundScheduler
 
 logger = logging.getLogger(__name__)
 
 
 def _send_alert(failed_sources):
-    """Send email alert when 2+ scraper sources fail."""
-    smtp_host = os.environ.get("SMTP_HOST")
-    smtp_user = os.environ.get("SMTP_USER")
-    smtp_pass = os.environ.get("SMTP_PASS")
-    alert_to = os.environ.get("ALERT_EMAIL")
-
-    if not all([smtp_host, smtp_user, smtp_pass, alert_to]):
-        logger.warning("Email alert skipped: SMTP env vars not configured")
+    """Send Slack alert when 2+ scraper sources fail."""
+    webhook_url = os.environ.get("SLACK_WEBHOOK_URL")
+    if not webhook_url:
+        logger.warning("Slack alert skipped: SLACK_WEBHOOK_URL not configured")
         return
 
-    subject = "Wrestling Ratings: %d/%d scrapers failed" % (len(failed_sources), 3)
-    body = "The following data sources failed during the latest scrape:\n\n"
-    body += "\n".join(f"  - {s}" for s in failed_sources)
-    body += "\n\nCheck Railway logs for details."
-    body += "\nhttps://wrestlingratings.welchcommercesystems.com/api/scrape-status"
-
-    msg = MIMEText(body)
-    msg["Subject"] = subject
-    msg["From"] = smtp_user
-    msg["To"] = alert_to
+    source_list = "\n".join(f"  - {s}" for s in failed_sources)
+    text = (
+        f":warning: *Wrestling Ratings: {len(failed_sources)}/3 scrapers failed*\n\n"
+        f"Failed sources:\n{source_list}\n\n"
+        f"<https://wrestlingratings.welchcommercesystems.com/api/scrape-status|View Status>"
+    )
 
     try:
-        port = int(os.environ.get("SMTP_PORT", 587))
-        with smtplib.SMTP(smtp_host, port) as server:
-            server.starttls()
-            server.login(smtp_user, smtp_pass)
-            server.send_message(msg)
-        logger.info("Alert email sent to %s", alert_to)
+        resp = requests.post(webhook_url, json={"text": text}, timeout=10)
+        resp.raise_for_status()
+        logger.info("Slack alert sent")
     except Exception as e:
-        logger.error("Failed to send alert email: %s", e)
+        logger.error("Failed to send Slack alert: %s", e)
 
 
 def run_full_scrape():
