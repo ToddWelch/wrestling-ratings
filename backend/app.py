@@ -1,8 +1,9 @@
 import os
 import json
 import logging
+import threading
 from pathlib import Path
-from flask import Flask, send_from_directory, jsonify
+from flask import Flask, send_from_directory, jsonify, request
 from scheduler import start_scheduler
 from seo import register_seo_routes
 
@@ -36,6 +37,24 @@ def api_ratings():
 @app.route("/api/health")
 def api_health():
     return jsonify({"status": "ok"})
+
+
+@app.route("/api/scrape", methods=["POST"])
+def api_scrape():
+    """Manually trigger a full scrape. Requires SCRAPE_KEY env var."""
+    key = os.environ.get("SCRAPE_KEY")
+    if not key or request.headers.get("X-Scrape-Key") != key:
+        return jsonify({"error": "unauthorized"}), 401
+
+    from scheduler import run_full_scrape
+    from youtube_scraper import run_youtube_scrape
+
+    def do_scrape():
+        run_full_scrape()
+        run_youtube_scrape()
+
+    threading.Thread(target=do_scrape, daemon=True).start()
+    return jsonify({"status": "scrape started"})
 
 
 register_seo_routes(app, RATINGS_FILE)

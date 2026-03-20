@@ -13,6 +13,8 @@ const NIELSEN_SHOWS = [
   { id: "tna", name: "TNA iMPACT", color: "#22C55E", network: "AMC", day: "Thu" },
 ];
 
+const RAW_SHOW = { id: "raw", name: "WWE Raw", color: "#DC2626", network: "Netflix", day: "Mon" };
+
 const STREAMING_SHOWS = [
   { id: "raw", name: "WWE Raw", color: "#DC2626", platform: "Netflix", metric: "Global Views (M)" },
   { id: "roh", name: "ROH", color: "#F97316", platform: "HonorClub/YT", metric: "YouTube Views (K)" },
@@ -86,7 +88,7 @@ function weekOf(dateStr) {
   return d.toISOString().split("T")[0];
 }
 
-function transformNielsen(nielsen) {
+function transformNielsen(nielsen, streaming) {
   if (!nielsen) return [];
   const weekMap = {};
 
@@ -98,6 +100,17 @@ function transformNielsen(nielsen) {
       }
       weekMap[week][showId] = entry.viewers;
       weekMap[week][showId + "_demo"] = entry.demo;
+    }
+  }
+
+  // Merge Raw (Netflix) into the combined chart data
+  if (streaming?.raw) {
+    for (const entry of streaming.raw) {
+      const week = weekOf(entry.date);
+      if (!weekMap[week]) {
+        weekMap[week] = { date: week, ts: toTs(week) };
+      }
+      weekMap[week].raw = entry.viewers;
     }
   }
 
@@ -166,7 +179,7 @@ export default function App() {
       const data = await resp.json();
 
       if (data.lastUpdated !== lastUpdated) {
-        setNielsenData(transformNielsen(data.nielsen));
+        setNielsenData(transformNielsen(data.nielsen, data.streaming));
         setStreamingData(transformStreaming(data.streaming));
         setLastUpdated(data.lastUpdated);
       }
@@ -237,26 +250,35 @@ export default function App() {
           </div>
         </div>
 
-        {/* Nielsen show toggles */}
+        {/* Show toggles */}
         <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 12, color: "#6a9a7a", fontFamily: "monospace", marginRight: 6, alignSelf: "center", letterSpacing: "0.08em" }}>TV</span>
+          <span style={{ fontSize: 12, color: "#6a9a7a", fontFamily: "monospace", marginRight: 6, alignSelf: "center", letterSpacing: "0.08em" }}>SHOWS</span>
           {NIELSEN_SHOWS.map((s) => (
             <button key={s.id} onClick={() => toggle(s.id)} style={showBtn(s, shows[s.id])}>
               <span style={dot(s.color, shows[s.id])} />{s.name}
               <span style={{ fontSize: 12, opacity: 0.5, marginLeft: 4 }}>({s.network})</span>
             </button>
           ))}
+          <button onClick={() => toggle("raw")} style={showBtn(RAW_SHOW, shows.raw)}>
+            <span style={dot(RAW_SHOW.color, shows.raw)} />{RAW_SHOW.name}
+            <span style={{ fontSize: 12, opacity: 0.5, marginLeft: 4 }}>({RAW_SHOW.network})</span>
+          </button>
         </div>
       </header>
 
-      {/* === NIELSEN CHART === */}
+      {/* === COMBINED VIEWERSHIP CHART === */}
       <section style={{ padding: "16px 12px 8px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, paddingLeft: 8 }}>
-          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#e8f5ee" }}>Nielsen TV Ratings</h2>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, paddingLeft: 8, flexWrap: "wrap" }}>
+          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#e8f5ee" }}>Weekly Viewership</h2>
           <span style={{ fontSize: 12, color: "#6a9a7a", fontFamily: "monospace", letterSpacing: "0.08em" }}>
             {metric === "viewers" ? "TOTAL VIEWERS (MILLIONS)" : "18-49 KEY DEMO RATING"}
           </span>
         </div>
+        {shows.raw && metric === "viewers" && (
+          <div style={{ paddingLeft: 8, marginBottom: 6, fontSize: 13, color: "#DC2626", fontFamily: "monospace" }}>
+            * WWE Raw uses Netflix global views, not Nielsen. Not directly comparable to cable ratings.
+          </div>
+        )}
         <ResponsiveContainer width="100%" height={370}>
           <LineChart data={fN} margin={{ top: 5, right: 20, left: 0, bottom: 30 }}>
             <CartesianGrid strokeDasharray="6 4" stroke="#1a3a2a" />
@@ -267,7 +289,7 @@ export default function App() {
               stroke="#1a3a2a"
               angle={-45} textAnchor="end" height={50} />
             <YAxis tick={{ fill: "#6a9a7a", fontSize: 12, fontFamily: "monospace" }} stroke="#1a3a2a"
-              domain={metric === "demo" ? [0, 0.6] : [0, 2.0]}
+              domain={metric === "demo" ? [0, 0.6] : [0, shows.raw ? 4.0 : 2.0]}
               tickFormatter={(v) => metric === "demo" ? v.toFixed(2) : v.toFixed(1)} />
             <Tooltip content={<Tip metric={metric} />} />
             <ReferenceLine x={toTs("2025-09-26")} stroke="#F59E0B44" strokeDasharray="4 4"
@@ -277,6 +299,11 @@ export default function App() {
                 name={s.name} stroke={s.color} strokeWidth={2} dot={false} connectNulls={false}
                 activeDot={{ r: 4, fill: s.color }} />
             ))}
+            {shows.raw && metric === "viewers" && (
+              <Line type="monotone" dataKey="raw" name="Raw (Netflix*)" stroke="#DC2626"
+                strokeWidth={2} strokeDasharray="6 3" dot={false} connectNulls={false}
+                activeDot={{ r: 4, fill: "#DC2626" }} />
+            )}
           </LineChart>
         </ResponsiveContainer>
       </section>
