@@ -432,8 +432,8 @@ export default function App() {
 
         </div>
 
-        {/* Tech stack badges */}
-        <div style={{ marginTop: 14, display: "flex", gap: 6, flexWrap: "wrap" }}>
+        {/* Tech stack badges + source link */}
+        <div style={{ marginTop: 14, display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
           {["Python", "Flask", "React", "Vite", "Recharts", "BeautifulSoup", "APScheduler", "Docker", "Railway"].map((tech) => (
             <span key={tech} style={{
               fontSize: 12, fontWeight: 700, fontFamily: "monospace",
@@ -441,6 +441,10 @@ export default function App() {
               color: "#4ade80", background: "#4ade8044", border: "1px solid #4ade8025",
             }}>{tech}</span>
           ))}
+          <a href="https://github.com/ToddWelch/wrestling-ratings" target="_blank" rel="noopener noreferrer"
+            style={{ fontSize: 12, fontWeight: 700, fontFamily: "monospace", padding: "1px 5px", borderRadius: 2,
+              color: "#8acca0", background: "#8acca022", border: "1px solid #8acca025", textDecoration: "none",
+            }}>View Source on GitHub</a>
         </div>
       </section>
 
