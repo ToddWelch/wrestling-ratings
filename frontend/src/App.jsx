@@ -429,7 +429,7 @@ export default function App() {
           <div style={{ background: "#0c1812", border: "1px solid #1a3a2a", borderRadius: 3, padding: "12px 14px" }}>
             <div style={{ fontSize: 14, fontWeight: 700, color: "#4ade80", marginBottom: 6, fontFamily: "monospace" }}>LIVE DATA PIPELINE</div>
             <div style={{ fontSize: 15, color: "#6a9a7a", lineHeight: 1.7 }}>
-              Ratings update automatically through a multi-source data pipeline with built-in redundancy. Primary: WrestlingAttitude.com, parsed with BeautifulSoup. Backup: Wrestlenomics, with viewership data extracted directly from article URL slugs. Fallback: Wrestling Inc individual article scraping. Safety net: existing data is never overwritten with fewer entries. An APScheduler cron runs the full pipeline every 6 hours. The frontend polls the API every 10 minutes and re-renders when new data arrives.
+              Ratings update automatically through a multi-source data pipeline with built-in redundancy. Primary: WrestlingAttitude.com, parsed with BeautifulSoup. Backup: Wrestlenomics, with viewership data extracted directly from article URL slugs. Fallback: Wrestling Inc individual article scraping. Safety net: existing data is never overwritten with fewer entries. An APScheduler cron runs the full pipeline every 6 hours. The frontend polls the API every 10 minutes and re-renders when new data arrives. If two or more sources fail, a Slack alert is sent automatically.
             </div>
           </div>
 
@@ -453,7 +453,7 @@ export default function App() {
           <div style={{ background: "#0c1812", border: "1px solid #1a3a2a", borderRadius: 3, padding: "12px 14px" }}>
             <div style={{ fontSize: 14, fontWeight: 700, color: "#4ade80", marginBottom: 6, fontFamily: "monospace" }}>INTERACTION</div>
             <div style={{ fontSize: 15, color: "#6a9a7a", lineHeight: 1.7 }}>
-              Toggle between Total Viewers and 18-49 Key Demo metrics, which switches the y-axis scale and data series. Five time range presets (1M, 3M, 6M, 1Y, ALL) filter the data window. Individual show lines can be toggled on and off. Hovering shows a tooltip with exact values for all visible shows on that date.
+              The combined chart shows all shows on one view, including WWE Raw (Netflix) displayed as a dashed line with a disclaimer since Netflix global views are not directly comparable to Nielsen TV ratings. Toggle between Total Viewers and 18-49 Key Demo metrics, which switches the y-axis scale and data series. Five time range presets (1M, 3M, 6M, 1Y, ALL) filter the data window. Individual show lines can be toggled on and off. Hovering shows a tooltip with exact values for all visible shows on that date.
             </div>
           </div>
 
@@ -461,7 +461,7 @@ export default function App() {
           <div style={{ background: "#0c1812", border: "1px solid #1a3a2a", borderRadius: 3, padding: "12px 14px" }}>
             <div style={{ fontSize: 14, fontWeight: 700, color: "#4ade80", marginBottom: 6, fontFamily: "monospace" }}>DEPLOYMENT</div>
             <div style={{ fontSize: 15, color: "#6a9a7a", lineHeight: 1.7 }}>
-              The app is containerized in a multi-stage Docker build: Node 20 compiles the React frontend, then Python 3.11 serves it via Gunicorn. Deployed on Railway with automatic deploys from the main branch. Health checks hit /api/health. SEO is handled with a server-rendered HTML shell containing Open Graph meta tags, JSON-LD structured data, and a dynamic sitemap.xml.
+              The app is containerized in a multi-stage Docker build: Node 20 compiles the React frontend, then Python 3.11 serves it via Gunicorn. Deployed on Railway with automatic deploys from the main branch. Health checks hit /api/health. SEO is handled with a server-rendered HTML shell containing Open Graph meta tags, JSON-LD structured data, and a dynamic sitemap.xml. Live scrape status for each data source is displayed on the site with last scrape time, success/failure state, and entry counts.
             </div>
           </div>
 
