@@ -47,6 +47,18 @@ def api_scrape_status():
     return jsonify(get_status())
 
 
+@app.route("/api/test-alert", methods=["POST"])
+def api_test_alert():
+    """Send a test Slack alert. Requires SCRAPE_KEY env var."""
+    key = os.environ.get("SCRAPE_KEY")
+    if not key or request.headers.get("X-Scrape-Key") != key:
+        return jsonify({"error": "unauthorized"}), 401
+
+    from scheduler import _send_alert
+    _send_alert(["WrestlingAttitude (TEST)", "Wrestlenomics (TEST)"])
+    return jsonify({"status": "test alert sent"})
+
+
 @app.route("/api/scrape", methods=["POST"])
 def api_scrape():
     """Manually trigger a full scrape. Requires SCRAPE_KEY env var."""
