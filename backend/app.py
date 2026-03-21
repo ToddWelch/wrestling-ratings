@@ -47,6 +47,29 @@ def api_scrape_status():
     return jsonify(get_status())
 
 
+@app.route("/api/reset-data", methods=["POST"])
+def api_reset_data():
+    """Force reset ratings data and re-scrape. Requires SCRAPE_KEY."""
+    key = os.environ.get("SCRAPE_KEY")
+    if not key or request.headers.get("X-Scrape-Key") != key:
+        return jsonify({"error": "unauthorized"}), 401
+
+    # Delete existing ratings to force fresh data
+    if RATINGS_FILE.exists():
+        RATINGS_FILE.unlink()
+        logger.info("Ratings data reset")
+
+    from scheduler import run_full_scrape
+    from youtube_scraper import run_youtube_scrape
+
+    def do_scrape():
+        run_full_scrape()
+        run_youtube_scrape()
+
+    threading.Thread(target=do_scrape, daemon=True).start()
+    return jsonify({"status": "data reset, scrape started"})
+
+
 @app.route("/api/test-alert", methods=["POST"])
 def api_test_alert():
     """Send a test Slack alert. Requires SCRAPE_KEY env var."""
