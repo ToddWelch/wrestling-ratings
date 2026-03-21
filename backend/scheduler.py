@@ -42,9 +42,11 @@ def run_full_scrape():
     # Primary: WrestlingAttitude
     primary = None
     try:
+        from scraper import scrape_raw
         nielsen_data = scrape_nielsen()
-        total = sum(len(v) for v in nielsen_data.values())
-        primary = {"nielsen": nielsen_data, "streaming": {"raw": []}}
+        raw_data = scrape_raw()
+        total = sum(len(v) for v in nielsen_data.values()) + len(raw_data)
+        primary = {"nielsen": nielsen_data, "streaming": {"raw": raw_data}}
         update_status("wrestlingattitude", "success", total)
         logger.info("WrestlingAttitude scrape complete: %d entries", total)
     except Exception as e:
