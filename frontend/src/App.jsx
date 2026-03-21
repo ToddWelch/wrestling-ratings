@@ -309,7 +309,7 @@ export default function App() {
               stroke="#1a3a2a"
               angle={-45} textAnchor="end" height={50} />
             <YAxis tick={{ fill: "#6a9a7a", fontSize: 12, fontFamily: "monospace" }} stroke="#1a3a2a"
-              domain={metric === "demo" ? [0, 0.6] : [0, shows.raw ? 4.0 : 2.0]}
+              domain={metric === "demo" ? [0, 0.6] : [0, shows.raw ? 6.0 : 2.0]}
               tickFormatter={(v) => metric === "demo" ? v.toFixed(2) : v.toFixed(1)} />
             <Tooltip content={<Tip metric={metric} />} />
             <ReferenceLine x={toTs("2025-09-26")} stroke="#F59E0B44" strokeDasharray="4 4"
@@ -321,7 +321,7 @@ export default function App() {
             ))}
             {shows.raw && metric === "viewers" && (
               <Line type="monotone" dataKey="raw" name="Raw (Netflix*)" stroke="#DC2626"
-                strokeWidth={2} strokeDasharray="6 3" dot={false} connectNulls={false}
+                strokeWidth={2} strokeDasharray="6 3" dot={false} connectNulls={true}
                 activeDot={{ r: 4, fill: "#DC2626" }} />
             )}
           </LineChart>
