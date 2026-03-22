@@ -18,7 +18,6 @@ const RAW_SHOW = { id: "raw", name: "WWE Raw", color: "#DC2626", network: "Netfl
 const STREAMING_SHOWS = [
   { id: "raw", name: "WWE Raw", color: "#DC2626", platform: "Netflix", metric: "Global Views (M)" },
   { id: "roh", name: "ROH", color: "#F97316", platform: "HonorClub/YT", metric: "YouTube Views (K)" },
-  { id: "nwa", name: "NWA Powerrr", color: "#06B6D4", platform: "Roku/YT", metric: "YouTube Views (K)" },
 ];
 
 /* ======= HELPERS ======= */
@@ -246,7 +245,7 @@ export default function App() {
         </h1>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 8, margin: "4px 0 0" }}>
           <p style={{ margin: 0, fontSize: 14, color: "#8acca0", fontFamily: "monospace", letterSpacing: "0.1em" }}>
-            WEEKLY VIEWERSHIP FOR WWE, AEW, TNA, ROH, AND NWA &bull; NIELSEN + STREAMING
+            WEEKLY VIEWERSHIP FOR WWE, AEW, TNA, AND ROH &bull; NIELSEN + STREAMING
           </p>
           {lastUpdated && (
             <span style={{ fontSize: 12, color: "#6a9a7a", fontFamily: "monospace" }}>
@@ -360,7 +359,7 @@ export default function App() {
             <Tooltip content={<Tip metric="viewers" />} />
             {shows.raw && <Line type="monotone" dataKey="raw" name="Raw (Netflix)" stroke="#DC2626" strokeWidth={2} dot={false} connectNulls={false} activeDot={{ r: 4, fill: "#DC2626" }} />}
             {shows.roh && <Line type="monotone" dataKey="roh" name="ROH (YouTube)" stroke="#F97316" strokeWidth={2} dot={false} connectNulls={false} activeDot={{ r: 4, fill: "#F97316" }} />}
-            {shows.nwa && <Line type="monotone" dataKey="nwa" name="NWA Powerrr (YT)" stroke="#06B6D4" strokeWidth={2} dot={false} connectNulls={false} activeDot={{ r: 4, fill: "#06B6D4" }} />}
+
           </LineChart>
         </ResponsiveContainer>
 
@@ -368,7 +367,6 @@ export default function App() {
         <div style={{ marginTop: 8, padding: "10px 12px", background: "#0c1812", border: "1px solid #1a3a2a", borderRadius: 3, fontSize: 14, color: "#6a9a7a", fontFamily: "monospace", lineHeight: 1.7 }}>
           <span style={{ color: "#DC2626", fontWeight: 700 }}>WWE Raw:</span> Netflix global views (millions). Not a Nielsen metric.
           <br /><span style={{ color: "#F97316", fontWeight: 700 }}>ROH:</span> Airs on HonorClub (Thu) and YouTube (Fri). YouTube view counts tracked when available.
-          <br /><span style={{ color: "#06B6D4", fontWeight: 700 }}>NWA Powerrr:</span> Moved to Roku Channel (Jul 2025). YouTube clips/episodes tracked when posted. No Roku viewership data is publicly reported.
           <br /><span style={{ color: "#F5C518", fontWeight: 700 }}>NIELSEN NOTE:</span> Nielsen switched to "Big Data + Panel" on Sep 26, 2025. Pre/post numbers are not directly comparable. Wrestling was disproportionately affected by the methodology change.
         </div>
       </section>
@@ -380,7 +378,7 @@ export default function App() {
         </h2>
         <div style={{ fontSize: 15, color: "#6a9a7a", lineHeight: 1.7, maxWidth: 800 }}>
           <p style={{ margin: "0 0 10px" }}>
-            This tracker provides weekly television ratings and viewership data for all major professional wrestling programs in the United States, including WWE SmackDown, WWE NXT, AEW Dynamite, AEW Collision, TNA iMPACT, WWE Raw on Netflix, Ring of Honor (ROH), and NWA Powerrr.
+            This tracker provides weekly television ratings and viewership data for all major professional wrestling programs in the United States, including WWE SmackDown, WWE NXT, AEW Dynamite, AEW Collision, TNA iMPACT, WWE Raw on Netflix, and Ring of Honor (ROH).
           </p>
           <p style={{ margin: "0 0 10px" }}>
             <strong style={{ color: "#8acca0" }}>Total Viewers</strong> represents the estimated number of people who watched the broadcast, reported in millions. <strong style={{ color: "#8acca0" }}>Key Demo (P18-49)</strong> is the rating among adults aged 18 to 49, which is considered the primary advertising currency for television programming.
@@ -389,10 +387,10 @@ export default function App() {
             In October 2025, Nielsen transitioned to a new "Big Data + Panel" measurement system that blends traditional panel data with viewing data from 45 million households. This change significantly impacted reported wrestling viewership numbers, with most shows seeing double-digit percentage declines under the new methodology. A subsequent adjustment in January 2026 partially reversed these declines for cable programming.
           </p>
           <p style={{ margin: "0 0 10px" }}>
-            WWE Raw moved from the USA Network to Netflix in January 2025 and is now measured by Netflix's global views metric (total hours viewed divided by runtime) rather than traditional Nielsen TV ratings. Ring of Honor streams weekly on HonorClub and YouTube, while NWA Powerrr airs on The Roku Channel with clips available on YouTube.
+            WWE Raw moved from the USA Network to Netflix in January 2025 and is now measured by Netflix's global views metric (total hours viewed divided by runtime) rather than traditional Nielsen TV ratings. Ring of Honor streams weekly on HonorClub and YouTube.
           </p>
           <p style={{ margin: 0 }}>
-            Data is sourced from publicly reported Nielsen ratings, Netflix weekly engagement reports, and YouTube public view counts. This site is updated weekly and is not affiliated with WWE, AEW, TNA, ROH, NWA, or Nielsen.
+            Data is sourced from publicly reported Nielsen ratings, Netflix weekly engagement reports, and YouTube public view counts. This site is updated weekly and is not affiliated with WWE, AEW, TNA, ROH, or Nielsen.
           </p>
         </div>
 
@@ -406,7 +404,6 @@ export default function App() {
             { name: "TNA iMPACT", day: "Thursday", net: "AMC", time: "8:00 PM ET" },
             { name: "WWE Raw", day: "Monday", net: "Netflix (Streaming)", time: "8:00 PM ET" },
             { name: "ROH Wrestling", day: "Thu/Fri", net: "HonorClub / YouTube", time: "7:00 PM ET" },
-            { name: "NWA Powerrr", day: "Tuesday", net: "Roku Channel", time: "8:00 PM ET" },
           ].map((s, i) => (
             <div key={i} style={{ background: "#0c1812", border: "1px solid #1a3a2a", borderRadius: 3, padding: "8px 10px" }}>
               <div style={{ fontSize: 15, fontWeight: 700, color: "#8acca0" }}>{s.name}</div>

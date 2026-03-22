@@ -12,14 +12,9 @@ RATINGS_FILE = DATA_DIR / "ratings.json"
 # Channel upload playlist IDs (UU + channel ID minus UC prefix)
 CHANNELS = {
     "roh": {
-        "playlist": "UUo7GEWMfad_JxLPkkfhKhHg",
+        "playlist": "UU4_uDa6w1kOyzsikIzReCKQ",
         "patterns": ["ROH", "Ring of Honor"],
         "name": "ROH",
-    },
-    "nwa": {
-        "playlist": "UU37OZkBkljNaGZWTnQbFwlg",
-        "patterns": ["NWA Powerrr", "POWERRR", "NWA Power"],
-        "name": "NWA Powerrr",
     },
 }
 
