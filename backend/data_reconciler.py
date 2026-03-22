@@ -159,7 +159,7 @@ def save_reconciled_data(reconciled):
     current["lastUpdated"] = datetime.now(timezone.utc).isoformat()
     current["scrapeStatus"]["nielsen"] = "ok"
 
-    with open(RATINGS_FILE, "w") as f:
-        json.dump(current, f, indent=2)
+    from file_utils import atomic_json_write
+    atomic_json_write(RATINGS_FILE, current)
 
     logger.info("Reconciled data saved")
