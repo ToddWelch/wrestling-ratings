@@ -17,16 +17,15 @@ def _load():
 
 
 def _save(data):
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    with open(STATUS_FILE, "w") as f:
-        json.dump(data, f, indent=2)
+    from file_utils import atomic_json_write
+    atomic_json_write(STATUS_FILE, data)
 
 
 def update_status(source, status, entries_count=0, error_msg=None):
     """Update scrape status for a source.
 
     Args:
-        source: "wrestlingattitude", "wrestlenomics", "wrestlinginc", "youtube"
+        source: "wrestlingattitude", "wrestlenomics", "youtube"
         status: "success" or "failed"
         entries_count: number of entries scraped
         error_msg: error message if failed

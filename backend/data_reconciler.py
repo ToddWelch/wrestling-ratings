@@ -44,26 +44,27 @@ def reconcile_entry(entries, tolerance=0.05):
     return entries[0]
 
 
-def merge_sources(primary, backup1, backup2):
-    """Merge Nielsen and streaming data from three sources.
+def merge_sources(primary, backup, _unused=None):
+    """Merge Nielsen and streaming data from two sources.
 
     Args:
         primary: WrestlingAttitude data {"nielsen": {...}, "streaming": {...}}
-        backup1: Wrestlenomics data (same format)
-        backup2: WrestlingInc data (same format)
+        backup: Wrestlenomics data (same format)
+        _unused: Reserved for future third source. Pass None.
 
     Returns:
         Reconciled data in the same format.
     """
+    sources = [("wrestlingattitude", primary), ("wrestlenomics", backup)]
+
     result_nielsen = {}
     result_streaming = {}
 
     # Reconcile Nielsen shows
     for show_id in NIELSEN_SHOWS:
-        # Collect entries by date from all sources
         by_date = {}
 
-        for source_name, source in [("primary", primary), ("wrestlenomics", backup1), ("wrestlinginc", backup2)]:
+        for source_name, source in sources:
             if not source:
                 continue
             entries = source.get("nielsen", {}).get(show_id, [])
@@ -73,7 +74,6 @@ def merge_sources(primary, backup1, backup2):
                     by_date[date] = []
                 by_date[date].append(entry)
 
-        # Reconcile each date
         reconciled = []
         for date in sorted(by_date.keys()):
             entry = reconcile_entry(by_date[date])
@@ -81,7 +81,7 @@ def merge_sources(primary, backup1, backup2):
                 reconciled.append(entry)
 
         result_nielsen[show_id] = reconciled
-        sources_count = sum(1 for s in [primary, backup1, backup2]
+        sources_count = sum(1 for _, s in sources
                           if s and s.get("nielsen", {}).get(show_id))
         logger.info("Reconciled %s: %d entries from %d sources",
                     show_id, len(reconciled), sources_count)
@@ -90,7 +90,7 @@ def merge_sources(primary, backup1, backup2):
     for show_id in STREAMING_SHOWS:
         by_date = {}
 
-        for source_name, source in [("primary", primary), ("wrestlenomics", backup1), ("wrestlinginc", backup2)]:
+        for source_name, source in sources:
             if not source:
                 continue
             entries = source.get("streaming", {}).get(show_id, [])
@@ -159,7 +159,7 @@ def save_reconciled_data(reconciled):
     current["lastUpdated"] = datetime.now(timezone.utc).isoformat()
     current["scrapeStatus"]["nielsen"] = "ok"
 
-    with open(RATINGS_FILE, "w") as f:
-        json.dump(current, f, indent=2)
+    from file_utils import atomic_json_write
+    atomic_json_write(RATINGS_FILE, current)
 
     logger.info("Reconciled data saved")

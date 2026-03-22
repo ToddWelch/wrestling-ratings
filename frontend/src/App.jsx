@@ -436,7 +436,7 @@ export default function App() {
           <div style={{ background: "#0c1812", border: "1px solid #1a3a2a", borderRadius: 3, padding: "12px 14px" }}>
             <div style={{ fontSize: 14, fontWeight: 700, color: "#4ade80", marginBottom: 6, fontFamily: "monospace" }}>LIVE DATA PIPELINE</div>
             <div style={{ fontSize: 15, color: "#6a9a7a", lineHeight: 1.7 }}>
-              Ratings update automatically through a multi-source data pipeline with built-in redundancy. Primary: WrestlingAttitude.com, parsed with BeautifulSoup. Backup: Wrestlenomics, with viewership data extracted directly from article URL slugs. Fallback: Wrestling Inc individual article scraping. Safety net: existing data is never overwritten with fewer entries. An APScheduler cron runs the full pipeline every 6 hours. The frontend polls the API every 10 minutes and re-renders when new data arrives. If two or more sources fail, a Slack alert is sent automatically.
+              Ratings update automatically through a dual-source data pipeline with built-in redundancy. Primary: WrestlingAttitude.com, parsed using DOM-based HTML traversal with BeautifulSoup. Backup: Wrestlenomics, with viewership data extracted directly from article URL slugs. Safety net: existing data is never overwritten with fewer entries, and per-show viewership range validation rejects any contaminated entries. An APScheduler cron runs the full pipeline every 6 hours. The frontend polls the API every 10 minutes and re-renders when new data arrives. If both sources fail, a Slack alert is sent automatically.
             </div>
           </div>
 
@@ -503,7 +503,6 @@ export default function App() {
             {[
               { key: "wrestlingattitude", label: "WrestlingAttitude" },
               { key: "wrestlenomics", label: "Wrestlenomics" },
-              { key: "wrestlinginc", label: "Wrestling Inc" },
               { key: "youtube", label: "YouTube API" },
             ].map(({ key, label }) => {
               const info = scrapeDetails[key];

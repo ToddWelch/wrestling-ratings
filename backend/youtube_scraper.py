@@ -160,8 +160,8 @@ def save_youtube_data(new_data):
     current["lastUpdated"] = datetime.now(timezone.utc).isoformat()
     current["scrapeStatus"]["youtube"] = "ok"
 
-    with open(RATINGS_FILE, "w") as f:
-        json.dump(current, f, indent=2)
+    from file_utils import atomic_json_write
+    atomic_json_write(RATINGS_FILE, current)
 
     logger.info("YouTube data saved")
 
@@ -176,8 +176,8 @@ def run_youtube_scrape():
                 with open(RATINGS_FILE) as f:
                     current = json.load(f)
                 current["scrapeStatus"]["youtube"] = "no_api_key"
-                with open(RATINGS_FILE, "w") as f:
-                    json.dump(current, f, indent=2)
+                from file_utils import atomic_json_write
+                atomic_json_write(RATINGS_FILE, current)
             return
         save_youtube_data(data)
     except Exception as e:
@@ -186,5 +186,5 @@ def run_youtube_scrape():
             with open(RATINGS_FILE) as f:
                 current = json.load(f)
             current["scrapeStatus"]["youtube"] = "error"
-            with open(RATINGS_FILE, "w") as f:
-                json.dump(current, f, indent=2)
+            from file_utils import atomic_json_write
+            atomic_json_write(RATINGS_FILE, current)
