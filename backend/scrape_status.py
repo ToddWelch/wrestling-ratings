@@ -25,7 +25,7 @@ def update_status(source, status, entries_count=0, error_msg=None):
     """Update scrape status for a source.
 
     Args:
-        source: "wrestlingattitude", "wrestlenomics", "wrestlinginc", "youtube"
+        source: "wrestlingattitude", "wrestlenomics", "youtube"
         status: "success" or "failed"
         entries_count: number of entries scraped
         error_msg: error message if failed
