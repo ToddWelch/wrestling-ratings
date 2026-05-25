@@ -2,6 +2,22 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Global rules pointer
+
+Behavior rules, orchestrator process, agent system, coding discipline,
+and infrastructure gotchas live in the global Claude config:
+
+- `/home/todd/.claude/CLAUDE.md` (always-loaded rule book)
+- `/home/todd/.claude/persona-rules.md` (Todd's identity + personal-style layer)
+
+This file (`/home/todd/projects/Wrestling Ratings/CLAUDE.md`) holds
+Wrestling-Ratings-specific guidance only: project overview, current
+state, development commands, architecture (Flask backend + scrapers
++ Recharts SPA), key constraints (Nielsen parsing quirks, SEO
+rendering, color theme), and environment variables.
+
+---
+
 ## Project Overview
 
 A Flask + React single-page application that displays interactive historical TV ratings charts for professional wrestling shows. Nielsen TV ratings (viewers + key demo) for 5 shows, plus a separate streaming/digital views section for Netflix/YouTube-based shows. Uses Recharts for charting.
