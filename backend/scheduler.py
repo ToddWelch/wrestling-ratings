@@ -33,7 +33,11 @@ def _send_alert(failed_sources):
         resp.raise_for_status()
         logger.info("Slack alert sent")
     except Exception as e:
-        logger.error("Failed to send Slack alert: %s", e)
+        # Never log e itself: requests puts the request URL, here the secret
+        # webhook, into its exception messages (HTTP errors and connection
+        # failures alike).
+        status = getattr(getattr(e, "response", None), "status_code", None)
+        logger.error("Failed to send Slack alert: %s (HTTP status %s)", type(e).__name__, status)
 
 
 def run_full_scrape():

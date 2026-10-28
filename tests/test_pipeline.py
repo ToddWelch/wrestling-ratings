@@ -95,6 +95,35 @@ class TestFailureAlerts:
         assert alerts == []
 
 
+class TestAlertNeverLogsWebhook:
+    WEBHOOK = "https://hooks.example.invalid/services/T000/B000/SECRETPART"
+
+    @pytest.fixture(autouse=True)
+    def webhook(self, monkeypatch):
+        monkeypatch.setenv("SLACK_WEBHOOK_URL", self.WEBHOOK)
+
+    def test_connection_error(self, monkeypatch, caplog):
+        def refuse(url, **kwargs):
+            raise scheduler.requests.ConnectionError(f"Max retries exceeded with url: {url}")
+        monkeypatch.setattr(scheduler.requests, "post", refuse)
+        scheduler._send_alert(["WrestlingAttitude: test"])
+        assert "SECRETPART" not in caplog.text
+        assert "ConnectionError" in caplog.text
+
+    def test_http_error(self, monkeypatch, caplog):
+        class Gone:
+            status_code = 404
+
+            def raise_for_status(self):
+                raise scheduler.requests.HTTPError(
+                    f"404 Client Error: Not Found for url: {TestAlertNeverLogsWebhook.WEBHOOK}",
+                    response=self)
+        monkeypatch.setattr(scheduler.requests, "post", lambda url, **kwargs: Gone())
+        scheduler._send_alert(["WrestlingAttitude: test"])
+        assert "SECRETPART" not in caplog.text
+        assert "HTTPError (HTTP status 404)" in caplog.text
+
+
 class TestSaveReconciledData:
     def test_unchanged_data_keeps_last_updated(self, data_dir):
         seed = json.loads(SEED.read_text())
