@@ -8,3 +8,7 @@ backend/data/ratings.json
 *.egg-info/
 .venv/
 venv/
+.pytest_cache/
+scratch/
+# Written at runtime by the scrapers; ratings.json above is tracked anyway as the deploy seed
+backend/data/scrape_status.json
