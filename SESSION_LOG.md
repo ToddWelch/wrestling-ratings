@@ -21,12 +21,13 @@ Handoff: `/home/todd/projects/Welch-Advisory-Team/scratch/handoff-wrestling-rati
    - Wrestlenomics `air_date` fixes the January year rollover;
    - draft corrections: TNA 37 reported weeks of 40, Raw three missing weeks, SmackDown demo 0.28, the April 3 note.
    Live re-run with the stricter checks: both sources succeed, no alerts, nothing written (the seed matches). 74 tests.
-10. **Railway overrides checked (reviewer's open item):** `startCommand` is null and the only variables are `SCRAPE_KEY`, `SLACK_WEBHOOK_URL` and `YOUTUBE_API_KEY`. No `GUNICORN_CMD_ARGS` or `WEB_CONCURRENCY`, so the Dockerfile CMD and `workers=1` apply.
+10. **Railway overrides checked (reviewer's open item):** `startCommand` is null and the only variables are `SCRAPE_KEY`, `SLACK_WEBHOOK_URL` and `YOUTUBE_API_KEY`. No `GUNICORN_CMD_ARGS` or `WEB_CONCURRENCY`, so the Dockerfile CMD and `workers=1` apply. Crash Override confirmed this independently.
+11. **Crash Override re-review: APPROVED WITH NOTES on `8888b9c`.** New time-bound item: Railway stops honoring `railway.toml` on 2026-12-01, and the service setting underneath is Railpack with no health check (decision 5 on the review page; `CARRY_FORWARD.md` item 4).
+12. **Cross-model gate fired** (event 6: Crash Override named Slack delivery and Railway's post-Dec-1 behavior as unverified). Fresh-eyes Sonnet, prompt `scratch/fresh-eyes-prompt-revive-scrapers-2026-10-28.md`, findings `scratch/fresh-eyes-review-revive-scrapers-2026-10-28.md`: **0 BLOCKING, 3 IMPORTANT, 4 MINOR. Gate cleared.** All seven are AGREE and deferred to `CARRY_FORWARD.md`. The one re-review allowed for this ship point is spent, the top two need a design change (merge by date), and production today is worse on every count. The webhook-in-logs miss is logged in `/home/todd/.claude/logs/gate-catches.md`.
 
 ### In progress / state
-- Crash Override re-review of the follow-up commit (one re-review, because the fixes reach past the original diff).
-- Review page for Todd: `/home/todd/projects/Wrestling Ratings/scratch/wrestling-ratings-revive-2026-10-28.html` (decisions: deploy, DNS record, region move, where posts live; ROH off is settled and overridable).
-- Production unchanged. Nothing merged or deployed. No DNS, domain or variable change made.
+- Review page for Todd: `/home/todd/projects/Wrestling Ratings/scratch/wrestling-ratings-revive-2026-10-28.html` (decisions: deploy, DNS record, region move, where posts live, Railway build settings; ROH off is settled and overridable).
+- PR open, not merged. Production unchanged. No DNS, domain or variable change made.
 
 ### Next
 1. Todd approves the merge and deploy (any merge to main deploys, because Railway has no watch patterns).
@@ -38,13 +39,13 @@ Handoff: `/home/todd/projects/Welch-Advisory-Team/scratch/handoff-wrestling-rati
 ### Open decisions (on the review page)
 - Region: move from asia-southeast1 to US East (recommended; `/api/health` takes 0.44 to 0.66 s to first byte from Ashburn).
 - Where posts live: `/reports/<slug>` on this site (recommended) or the WCS blog.
+- Railway build settings: pin builder = Dockerfile and the health check in service settings before 2026-12-01 (recommended, with this deploy).
 
 ### Not done, recorded
-- January 2027: add the 2027 page to `URLS` in `backend/scraper.py`.
-- `/api/scrape` and `/api/reset-data` run scrapes outside the scheduler's thread (existing behavior). Reviewer note: `/api/reset-data` deletes `ratings.json` first, and with WrestlingAttitude now failing as a whole, a single page error during a reset publishes backup-only data (1 to 4 points per show) until the next run. Manual, `SCRAPE_KEY`-gated, unused; fix by scraping before swapping and routing manual triggers through the scheduler.
-- Whether `SLACK_WEBHOOK_URL` delivers is unverified. `/api/test-alert` would send a real Slack message, so it needs Todd's OK.
+- Deferred review and gate findings: `CARRY_FORWARD.md`, ranked (includes January 2027, the manual endpoints and the Railway cutoff).
+- Whether `SLACK_WEBHOOK_URL` delivers is unverified. `/api/test-alert` would send a real Slack message, so it needs Todd's OK, and `CARRY_FORWARD.md` item 2 (webhook URL in logs) should land first.
 - The YouTube status card reports OK even when the key is missing (existing behavior).
 - The repo has no branch protection and no CI. Recommend protecting `main` and adding a pytest workflow (Todd's call, repo settings).
 
 ### Estimate vs actual
-No estimate was given up front. Agent compute time about 2.5 hours, including diagnosis, the fix and tests, the live runs, drafts and the review page.
+No estimate was given up front. Agent compute time about 3.5 hours, including diagnosis, the fix and two review rounds, the gate, the live runs, drafts and the review page.
