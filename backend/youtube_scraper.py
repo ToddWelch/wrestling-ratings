@@ -10,13 +10,18 @@ DATA_DIR = Path(__file__).parent / "data"
 RATINGS_FILE = DATA_DIR / "ratings.json"
 
 # Channel upload playlist IDs (UU + channel ID minus UC prefix)
-CHANNELS = {
+# ROH is switched off (2026-10-28). Its YouTube uploads are single matches and
+# segments; full ROH TV episodes air on HonorClub. The title filter accepted
+# 32 such uploads in one month, so the chart would have shown clip views as
+# weekly viewership. Move it back into CHANNELS once a real episode metric exists.
+DISABLED_CHANNELS = {
     "roh": {
         "playlist": "UU4_uDa6w1kOyzsikIzReCKQ",
         "patterns": ["ROH", "Ring of Honor"],
         "name": "ROH",
     },
 }
+CHANNELS = {}
 
 
 def get_youtube_service():
@@ -140,10 +145,12 @@ def save_youtube_data(new_data):
             "streaming": {"raw": [], "roh": [], "nwa": []},
         }
 
+    changed = False
     streaming = current.get("streaming", {})
     for show_id, entries in new_data.items():
         existing = streaming.get(show_id, [])
         if len(entries) >= len(existing):
+            changed = changed or entries != existing
             streaming[show_id] = entries
         else:
             logger.warning(
@@ -151,8 +158,12 @@ def save_youtube_data(new_data):
                 show_id, len(entries), len(existing),
             )
 
+    # lastUpdated moves only when stored data does (see save_reconciled_data)
+    if not changed and current["scrapeStatus"].get("youtube") == "ok":
+        return
     current["streaming"] = streaming
-    current["lastUpdated"] = datetime.now(timezone.utc).isoformat()
+    if changed:
+        current["lastUpdated"] = datetime.now(timezone.utc).isoformat()
     current["scrapeStatus"]["youtube"] = "ok"
 
     from file_utils import atomic_json_write

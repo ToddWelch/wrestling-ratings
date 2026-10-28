@@ -12,4 +12,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ ./backend/
 COPY --from=frontend-build /app/frontend/dist ./frontend/dist
 EXPOSE 8080
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--chdir", "backend", "app:app"]
+CMD ["gunicorn", "--config", "backend/gunicorn.conf.py", "--bind", "0.0.0.0:8080", "--chdir", "backend", "app:app"]

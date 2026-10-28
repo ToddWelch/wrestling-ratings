@@ -1,11 +1,13 @@
 import re
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 import requests
 from bs4 import BeautifulSoup
+
+from errors import ScrapeError
 
 logger = logging.getLogger(__name__)
 
@@ -49,10 +51,14 @@ STREAMING_URL_RE = re.compile(
     r"-(\w{3})-(\d{1,2})-on-netflix-(\d+)-global-views",
 )
 
+# Article paths: /tv-ratings/2026/... (until mid-2026), now /articles/2026/...
+ARTICLE_YEAR_RE = re.compile(r"/(?:tv-ratings|articles)/(\d{4})/")
+
 
 def fetch_article_urls():
     """Fetch all TV ratings article URLs from Wrestlenomics category pages."""
     urls = []
+    failed_pages = 0
     for cat_url in CATEGORY_URLS:
         try:
             resp = requests.get(cat_url, timeout=30, headers={
@@ -63,24 +69,47 @@ def fetch_article_urls():
 
             for link in soup.find_all("a", href=True):
                 href = link["href"]
-                if "/tv-ratings/20" in href and "rating" in href:
+                if ARTICLE_YEAR_RE.search(href) and "rating" in href:
                     if href not in urls:
                         urls.append(href)
 
         except Exception as e:
+            failed_pages += 1
             logger.warning("Failed to fetch Wrestlenomics category page %s: %s", cat_url, e)
+
+    if failed_pages == len(CATEGORY_URLS):
+        raise ScrapeError("every Wrestlenomics category page failed to load")
 
     logger.info("Found %d Wrestlenomics article URLs", len(urls))
     return urls
 
 
 def parse_year_from_url(url):
-    """Extract year from URL like /tv-ratings/2026/..."""
-    match = re.search(r"/tv-ratings/(\d{4})/", url)
+    """Extract year from URL like /articles/2026/... or /tv-ratings/2026/..."""
+    match = ARTICLE_YEAR_RE.search(url)
     return int(match.group(1)) if match else None
 
 
-def parse_nielsen_from_url(url):
+def air_date(year, month, day, today=None):
+    """ISO air date for a show named in an article published in `year`.
+
+    The URL carries the year the article was published, not the year the
+    show aired: a Dec 28 Raw written up in January sits under the new year.
+    No show airs after its write-up, so a date more than a day past today
+    belongs to the year before. Returns None for an impossible date.
+    """
+    today = today or datetime.now(timezone.utc).date()
+    try:
+        aired = date(year, month, day)
+        if aired > today + timedelta(days=1):
+            aired = date(year - 1, month, day)
+    except ValueError:
+        logger.warning("Impossible date in Wrestlenomics URL: %s-%s-%s", year, month, day)
+        return None
+    return aired.isoformat()
+
+
+def parse_nielsen_from_url(url, today=None):
     """Parse Nielsen show data directly from a Wrestlenomics URL slug."""
     year = parse_year_from_url(url)
     if not year:
@@ -104,16 +133,18 @@ def parse_nielsen_from_url(url):
     viewers = round(int(viewers_str) / 1_000_000, 3)
     # Demo in URL is like "0-32" meaning 0.32
     demo = round(float(demo_str.replace("-", ".")), 2)
-    date = f"{year}-{month:02d}-{day:02d}"
+    aired = air_date(year, month, day, today)
+    if not aired:
+        return None
 
     return {
         "type": "nielsen",
         "show_id": show_id,
-        "entry": {"date": date, "viewers": viewers, "demo": demo},
+        "entry": {"date": aired, "viewers": viewers, "demo": demo},
     }
 
 
-def parse_streaming_from_url(url):
+def parse_streaming_from_url(url, today=None):
     """Parse streaming show data from a Wrestlenomics URL slug."""
     year = parse_year_from_url(url)
     if not year:
@@ -135,12 +166,14 @@ def parse_streaming_from_url(url):
     day = int(day_str)
     # Raw views are in millions in the URL (e.g., 2800000 = 2.8M)
     viewers = round(int(views_str) / 1_000_000, 1)
-    date = f"{year}-{month:02d}-{day:02d}"
+    aired = air_date(year, month, day, today)
+    if not aired:
+        return None
 
     return {
         "type": "streaming",
         "show_id": show_id,
-        "entry": {"date": date, "viewers": viewers},
+        "entry": {"date": aired, "viewers": viewers},
     }
 
 
@@ -169,5 +202,12 @@ def scrape_wrestlenomics():
     for show_id, entries in streaming.items():
         entries.sort(key=lambda e: e["date"])
         logger.info("Wrestlenomics: %d streaming entries for %s", len(entries), show_id)
+
+    total = sum(len(v) for v in nielsen.values()) + sum(len(v) for v in streaming.values())
+    if total == 0:
+        raise ScrapeError(
+            f"Wrestlenomics returned {len(urls)} article links but none parsed "
+            "into ratings (URL format changed?)"
+        )
 
     return {"nielsen": nielsen, "streaming": streaming}
