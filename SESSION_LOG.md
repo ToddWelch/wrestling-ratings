@@ -2,6 +2,28 @@
 
 Newest first. Never delete entries.
 
+## 2026-10-28 (later): Deployed, region moved, DNS live, Railway IaC migration
+
+Todd's decisions (review page, pasted back): deploy yes; region us-east4; posts at `/reports/<slug>` on this site; Railway "the permanent fix"; ROH off. In chat: remove the push deny rule, widen the Cloudflare token, IaC as the next PR.
+
+### Done
+1. **Deployed.** PR #1 merged at the reviewed head `6d2b0c0` as merge commit `c520d8d` (`--match-head-commit`). Railway deployment `15086366` SUCCESS. The scheduler started at boot; WrestlingAttitude 495 and Wrestlenomics 18 entries, both success. It picked up SmackDown 2026-10-23, a new row.
+2. **Push unblock.** `/home/todd/projects/Wrestling Ratings/.claude/settings.local.json` had `deny: Bash(git push *)` (machine-local, from 2026-03-22). Removed with Todd's approval. The running session kept the cached rule, so Todd ran the first push himself.
+3. **Region moved** to `us-east4-eqdc4a` (`serviceInstanceUpdate` `multiRegionConfig`, then a redeploy, `4625abfb` SUCCESS). `/api/health` time to first byte from Ashburn went from 0.44 to 0.66 s to 0.026 to 0.033 s. Scrapes succeeded again after the move.
+4. **Cloudflare token widened:** "Cloudflare Agent Token - 2026-04-15" DNS Write gained `welchcommercesystems.com` at 23:46 UTC. The IP condition and the other 3 policies were unchanged, and the value did not roll. Recorded in `/home/todd/.claude/infrastructure-access.md`.
+5. **DNS live:** `CNAME wrestlingratings -> xn0jbavb.up.railway.app`, proxied, record id `75283a2637d99d2b3affec7771b42f14`, created 23:51 UTC. `https://wrestlingratings.welchcommercesystems.com` returns 200 and `/api/health` ok; the sitemap `lastmod` is now 2026-10-28.
+6. **Browser smoke at the real domain** (Chrome): chart, ALL range, NXT toggle, tooltip, no console errors. Earlier on the railway.app URL: key demo, 3M, Collision toggle, tooltip on the week of Oct 12 matching the data, status cards all OK.
+7. **Railway IaC** (branch `chore/railway-iac-migration`): `.railway/railway.ts` declares service `wrestling-ratings` with the Dockerfile builder, the `/api/health` check (10 s), one replica in us-east4, and the variables as `preserve()`. `railway.toml` removed. `railway config plan`: 0 add, 2 change (builder null to DOCKERFILE; health check null to /api/health, 10), 0 destroy. `railway config migrate` was NOT used as generated: it named the service "Wrestling Ratings", which would likely have created a second service, and it dropped the Dockerfile setting to a comment.
+
+### In progress / state
+- IaC PR: Crash Override review, then the cross-model gate (event 1, first write through the IaC path), then `railway config apply`, then merge. **Apply must come before the merge**: the merge deploy reads service settings once `railway.toml` is gone, and the setting underneath is RAILPACK.
+- Railway still shows the custom domain's certificate as "issuing" with DNS "requires update". It may lag; the site already serves over Cloudflare. The WCS apex, proxied the same way, shows VALID and PROPAGATED.
+
+### Next
+1. Finish the IaC PR as above, then verify the deployment used the Dockerfile builder and the scheduler started.
+2. Next PR: `CARRY_FORWARD.md` items (merge by date first), then the on-page SEO fixes and `/reports/<slug>` pages.
+3. Slack test alert only with Todd's OK.
+
 ## 2026-10-28: Revive (site down, stale data, SEO drafts)
 
 Handoff: `/home/todd/projects/Welch-Advisory-Team/scratch/handoff-wrestling-ratings-revive-2026-10-28.md`. Build class EXTERNAL. Branch `fix/revive-scrapers-scheduler`.
