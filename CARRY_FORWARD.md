@@ -55,12 +55,18 @@ Remove an item only when the PR that fixes it merges.
 
 ## Before ROH (or any YouTube channel) is switched back on
 
-- **The YouTube API key can land in logs.** `youtube_scraper.scrape_youtube`
-  logs the exception from `googleapiclient`, whose `HttpError` text carries
-  the request URL, including the `key=` query parameter. Latent today: with
-  `CHANNELS` empty the API is never called. Log the exception type and status
-  only, as `scheduler._send_alert` now does (fixed before the 2026-10-28
-  merge, gate M-2).
+- **The YouTube API key can land in logs and on the public status card.** A
+  `googleapiclient` `HttpError` carries the request URL, including the `key=`
+  query parameter, within its first 200 characters (Crash Override confirmed
+  with a fake key). Three places pass that text on:
+  1. `youtube_scraper.scrape_youtube` logs it (per-channel `except`);
+  2. `youtube_scraper.run_youtube_scrape` logs it;
+  3. `scheduler.start_scheduler`'s `youtube_with_status` stores `str(e)` in
+     the scrape status file, and `/api/scrape-status` and the site's status
+     card show its first 200 characters publicly.
+  Latent today: with `CHANNELS` empty the API is never called. Log and store
+  the exception type and status only, as `scheduler._send_alert` now does
+  (fixed before the 2026-10-28 merge, gate M-2).
 
 ## Dated
 
