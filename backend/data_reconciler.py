@@ -120,7 +120,11 @@ def merge_sources(primary, backup, _unused=None):
 
 
 def save_reconciled_data(reconciled):
-    """Save reconciled data to ratings.json. Never overwrite with less data."""
+    """Save reconciled data to ratings.json. Never overwrite with less data.
+
+    Returns True when a list changed and the file was written, False when
+    the stored data already matched (the file and lastUpdated are untouched).
+    """
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
     current = {}
@@ -137,10 +141,12 @@ def save_reconciled_data(reconciled):
         }
 
     # Only update if we have more or equal data
+    changed = False
     nielsen = current.get("nielsen", {})
     for show_id, entries in reconciled["nielsen"].items():
         existing = nielsen.get(show_id, [])
         if len(entries) >= len(existing):
+            changed = changed or entries != existing
             nielsen[show_id] = entries
         else:
             logger.warning(
@@ -152,7 +158,14 @@ def save_reconciled_data(reconciled):
     for show_id, entries in reconciled["streaming"].items():
         existing = streaming.get(show_id, [])
         if len(entries) >= len(existing):
+            changed = changed or entries != existing
             streaming[show_id] = entries
+
+    # lastUpdated is what the site shows as "Last updated" and what the
+    # sitemap reports, so it moves only when the stored data does.
+    if not changed:
+        logger.info("Reconciled data matches what is stored; nothing written")
+        return False
 
     current["nielsen"] = nielsen
     current["streaming"] = streaming
@@ -163,3 +176,4 @@ def save_reconciled_data(reconciled):
     atomic_json_write(RATINGS_FILE, current)
 
     logger.info("Reconciled data saved")
+    return True

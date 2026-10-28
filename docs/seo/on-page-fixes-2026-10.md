@@ -29,8 +29,11 @@ each item needs Todd's go-ahead because it alters public copy or adds a page.
      reference line is Sept 26, 2025. Pick one. The same paragraph says "a
      subsequent adjustment in January 2026 partially reversed these declines";
      verify that or cut it.
-   - The ROH note says YouTube view counts are tracked; with ROH switched off
-     it should say ROH airs on HonorClub and is not charted.
+   - ROH is still in the UI though its data is switched off: the ROH toggle
+     and line in the streaming chart (`frontend/src/App.jsx` lines 20 and 361),
+     the note saying YouTube view counts are tracked (line 369), the schedule
+     row (line 406) and the subtitle "WWE, AEW, TNA, AND ROH". Either remove
+     ROH or say it airs on HonorClub and is not charted.
 5. **Sitemap `lastmod` has been 2026-03-20 since launch.** It reads
    `lastUpdated`, so it fixes itself once the scheduler runs in production.
    Check it after the deploy.

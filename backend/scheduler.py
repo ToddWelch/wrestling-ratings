@@ -15,7 +15,7 @@ _scheduler_lock = threading.Lock()
 
 
 def _send_alert(failed_sources):
-    """Send Slack alert when all scraper sources fail."""
+    """Send a Slack alert naming the failed scraper sources."""
     webhook_url = os.environ.get("SLACK_WEBHOOK_URL")
     if not webhook_url:
         logger.warning("Slack alert skipped: SLACK_WEBHOOK_URL not configured")
@@ -41,9 +41,11 @@ def run_full_scrape():
     from scraper import scrape_wrestlingattitude
     from scraper_wrestlenomics import scrape_wrestlenomics
     from data_reconciler import merge_sources, save_reconciled_data
-    from scrape_status import update_status
+    from scrape_status import update_status, get_status
 
     logger.info("Starting full multi-source scrape")
+    previous = get_status()
+    failures = {}  # source key -> "Name: error" for the alert
 
     # Primary: WrestlingAttitude
     primary = None
@@ -56,6 +58,7 @@ def run_full_scrape():
     except Exception as e:
         update_status("wrestlingattitude", "failed", error_msg=str(e))
         logger.error("WrestlingAttitude scrape failed: %s", e)
+        failures["wrestlingattitude"] = f"WrestlingAttitude: {e}"
 
     # Backup: Wrestlenomics
     backup = None
@@ -68,16 +71,15 @@ def run_full_scrape():
     except Exception as e:
         update_status("wrestlenomics", "failed", error_msg=str(e))
         logger.error("Wrestlenomics scrape failed: %s", e)
+        failures["wrestlenomics"] = f"Wrestlenomics: {e}"
 
-    # Check failure count and alert if both fail
-    failures = []
-    if not primary:
-        failures.append("WrestlingAttitude")
-    if not backup:
-        failures.append("Wrestlenomics")
-
-    if len(failures) >= 2:
-        _send_alert(failures)
+    # Alert once per outage: when a source goes from not-failed to failed.
+    # Either source matters. The backup alone cannot refresh the chart (the
+    # fewer-entries guard keeps the primary's longer lists), so a primary
+    # failure freezes the site even while the backup is up.
+    newly_failed = [k for k in failures if previous.get(k, {}).get("status") != "failed"]
+    if newly_failed:
+        _send_alert(list(failures.values()))
 
     # Reconcile and save
     if primary or backup:

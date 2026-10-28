@@ -1,6 +1,7 @@
 """Tests for the Wrestlenomics backup scraper. The category page fixture was
 captured 2026-10-28, after article URLs moved from /tv-ratings/ to /articles/."""
 import sys
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -8,7 +9,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent.parent / "backend"))
 
 import scraper_wrestlenomics as wn
-from scraper import ScrapeError
+from errors import ScrapeError
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
@@ -42,6 +43,28 @@ class TestUrlParsing:
         url = ("https://wrestlenomics.com/articles/2026/wwe-raw-oct-19-on-netflix-"
                "2500000-global-views-tv-ratings-analysis/")
         assert wn.parse_streaming_from_url(url)["entry"] == {"date": "2026-10-19", "viewers": 2.5}
+
+    def test_december_show_written_up_in_january(self):
+        # Article year is the publication year; the show aired the year before
+        url = ("https://wrestlenomics.com/articles/2027/wwe-raw-dec-28-on-netflix-"
+               "2600000-global-views-tv-ratings-analysis/")
+        entry = wn.parse_streaming_from_url(url, today=date(2027, 1, 6))["entry"]
+        assert entry["date"] == "2026-12-28"
+
+    def test_tna_new_years_eve(self):
+        url = ("https://wrestlenomics.com/articles/2027/tna-impact-dec-31-on-amc-"
+               "210000-viewers-0-04-p18-49-rating-tv-ratings-analysis/")
+        assert wn.parse_nielsen_from_url(url, today=date(2027, 1, 7))["entry"]["date"] == "2026-12-31"
+
+    def test_same_year_date_unchanged(self):
+        assert wn.air_date(2026, 10, 21, today=date(2026, 10, 28)) == "2026-10-21"
+
+    def test_tonight_across_utc_midnight_unchanged(self):
+        # A show dated one day past today's UTC date is treated as this year
+        assert wn.air_date(2026, 10, 29, today=date(2026, 10, 28)) == "2026-10-29"
+
+    def test_impossible_date(self):
+        assert wn.air_date(2027, 2, 29, today=date(2027, 3, 5)) is None
 
     def test_non_ratings_article(self):
         url = ("https://wrestlenomics.com/articles/2025/nielsen-has-changed-how-tv-ratings-"

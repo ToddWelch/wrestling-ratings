@@ -46,7 +46,9 @@ python -m pytest -q tests
 # Backend (dev server; starts the scheduler, which scrapes the live sources and writes backend/data/)
 cd backend && pip install -r ../requirements.txt && python app.py
 
-# Production-equivalent run, from the repo root (needs frontend/dist built)
+# Production-equivalent run (needs frontend/dist built). It scrapes the live sources and
+# rewrites backend/data/ratings.json, the tracked deploy seed, so run it from a copy
+# unless you mean to regenerate the seed
 gunicorn --config backend/gunicorn.conf.py --bind 127.0.0.1:8080 --chdir backend app:app
 
 # Frontend (dev with Vite, proxies API to Flask)
@@ -61,8 +63,10 @@ cd frontend && npm run build
 ## Architecture
 
 - **Flask backend** serves the API (`/api/ratings`, `/api/health`), SEO routes (`/sitemap.xml`, `/robots.txt`), and the static Vite-built React app
-- **Nielsen scraper** (`scraper.py`) parses WrestlingAttitude.com pages for TV ratings data. In the paragraph layout (2025 page) viewer numbers use European-style comma as decimal separator ("1,175" = 1.175M); the table layout (2026 page) uses a period ("1.175 M"). `parse_viewer_number` handles both. A page that fails or yields no sections raises `ScrapeError`
-- **Wrestlenomics scraper** (`scraper_wrestlenomics.py`) is the backup source, parsed from article URL slugs; zero parsed entries raises `ScrapeError`
+- **Nielsen scraper** (`scraper.py`) parses WrestlingAttitude.com pages for TV ratings data. In the paragraph layout (2025 page) viewer numbers use European-style comma as decimal separator ("1,175" = 1.175M); the table layout (2026 page) uses a period ("1.175 M"). `parse_viewer_number` handles both. Table columns are found by header text. A page that fails to load, or any show in `EXPECTED_SHOWS` for that year with no valid entries, raises `ScrapeError`; every `URLS` year needs an `EXPECTED_SHOWS` entry
+- **Wrestlenomics scraper** (`scraper_wrestlenomics.py`) is the backup source, parsed from article URL slugs. The URL year is the publication year, so `air_date` moves a date that would land in the future back one year (late-December shows written up in January). Zero parsed entries raises `ScrapeError`
+- **Alerts:** `scheduler.run_full_scrape` sends a Slack alert (`SLACK_WEBHOOK_URL`) when either source goes from not-failed to failed, once per outage. The backup alone cannot refresh the chart (the fewer-entries guard keeps the primary's longer lists), so a WrestlingAttitude failure freezes the site
+- **`lastUpdated`** (the site's "Last updated" and the sitemap `lastmod`) moves only when stored data changes
 - **YouTube scraper** (`youtube_scraper.py`) uses YouTube Data API v3. NWA was removed in March 2026 and ROH is switched off (`DISABLED_CHANNELS`), so it currently scrapes nothing
 - **APScheduler** (started from `gunicorn.conf.py`) runs the two-source scrape every 6 hours and YouTube every 12 hours, both on one thread, first run at boot
 - **Data store** is `backend/data/ratings.json` - never overwrite with less data than currently exists

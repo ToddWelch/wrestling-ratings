@@ -12,12 +12,19 @@ Handoff: `/home/todd/projects/Welch-Advisory-Team/scratch/handoff-wrestling-rati
 3. **Found both sources broken for 2026.** The WrestlingAttitude 2026 page moved to h3 headers plus tables (0 rows parsed). Wrestlenomics moved articles from `/tv-ratings/YYYY/` to `/articles/YYYY/` (0 rows parsed).
 4. **Fixed on the branch** (commit `18944bf`): `backend/gunicorn.conf.py` starts the scheduler (one worker); single-thread executor with a 1h misfire grace; both page layouts parsed; Wrestlenomics URL fix; empty or failed sources raise `ScrapeError`; ROH YouTube switched off (uploads are clips, not episodes); `ratings.json` reseeded from a clean scrape (2025-01-01 to 2026-10-21). 52 tests, 33 new.
 5. **Verified live:** the exact gunicorn command from a scratch copy scraped both sources (495 + 18 rows), and the YouTube API probe returned 32 ROH uploads (all clips, hence ROH off). Browser smoke of that local server in Chrome: charts, toggles, ranges, tooltip, status cards; no console messages.
-6. **Monthly cost:** about $0.47 of Railway usage (0.046 GB memory at $10 per GB-month), inside the Pro plan's $20 included credit. The workspace total was not readable (Not Authorized).
+6. **Monthly cost:** about $0.47 of Railway usage: 0.046 GB memory at $10 per GB-month ($0.46), CPU 0.0001 vCPU at $20 per vCPU-month (under $0.01), egress negligible. Measured before the scheduler ran in production; scheduled scraping adds a little CPU. Inside the Pro plan's $20 included credit. The workspace total was not readable (Not Authorized).
 7. **SEO drafts (not published):** five posts in `docs/seo/post-drafts-2026-10.md`; on-page fix list in `docs/seo/on-page-fixes-2026-10.md`.
 8. **CLAUDE.md "Current State"** rewritten (it said "not scaffolded").
+9. **Crash Override: APPROVED WITH NOTES** on `a6fd1a3`, no blocking findings. It booted the Dockerfile command and confirmed one scheduler, the boot-time scrape, health under 16 ms during it, and a seed equal to a fresh scrape. Should-fix items addressed in the follow-up commit:
+   - fail-loud now requires every `EXPECTED_SHOWS` show to yield entries, maps table columns by header text, reads `<th>` row cells, and range-checks Raw;
+   - alerts fire when either source newly fails (once per outage), and `lastUpdated` moves only when data changes;
+   - Wrestlenomics `air_date` fixes the January year rollover;
+   - draft corrections: TNA 37 reported weeks of 40, Raw three missing weeks, SmackDown demo 0.28, the April 3 note.
+   Live re-run with the stricter checks: both sources succeed, no alerts, nothing written (the seed matches). 74 tests.
+10. **Railway overrides checked (reviewer's open item):** `startCommand` is null and the only variables are `SCRAPE_KEY`, `SLACK_WEBHOOK_URL` and `YOUTUBE_API_KEY`. No `GUNICORN_CMD_ARGS` or `WEB_CONCURRENCY`, so the Dockerfile CMD and `workers=1` apply.
 
 ### In progress / state
-- Crash Override review of the branch.
+- Crash Override re-review of the follow-up commit (one re-review, because the fixes reach past the original diff).
 - Review page for Todd: `/home/todd/projects/Wrestling Ratings/scratch/wrestling-ratings-revive-2026-10-28.html` (decisions: deploy, DNS record, region move, where posts live; ROH off is settled and overridable).
 - Production unchanged. Nothing merged or deployed. No DNS, domain or variable change made.
 
@@ -34,7 +41,8 @@ Handoff: `/home/todd/projects/Welch-Advisory-Team/scratch/handoff-wrestling-rati
 
 ### Not done, recorded
 - January 2027: add the 2027 page to `URLS` in `backend/scraper.py`.
-- `/api/scrape` and `/api/reset-data` run scrapes outside the scheduler's thread (existing behavior).
+- `/api/scrape` and `/api/reset-data` run scrapes outside the scheduler's thread (existing behavior). Reviewer note: `/api/reset-data` deletes `ratings.json` first, and with WrestlingAttitude now failing as a whole, a single page error during a reset publishes backup-only data (1 to 4 points per show) until the next run. Manual, `SCRAPE_KEY`-gated, unused; fix by scraping before swapping and routing manual triggers through the scheduler.
+- Whether `SLACK_WEBHOOK_URL` delivers is unverified. `/api/test-alert` would send a real Slack message, so it needs Todd's OK.
 - The YouTube status card reports OK even when the key is missing (existing behavior).
 - The repo has no branch protection and no CI. Recommend protecting `main` and adding a pytest workflow (Todd's call, repo settings).
 

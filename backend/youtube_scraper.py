@@ -145,10 +145,12 @@ def save_youtube_data(new_data):
             "streaming": {"raw": [], "roh": [], "nwa": []},
         }
 
+    changed = False
     streaming = current.get("streaming", {})
     for show_id, entries in new_data.items():
         existing = streaming.get(show_id, [])
         if len(entries) >= len(existing):
+            changed = changed or entries != existing
             streaming[show_id] = entries
         else:
             logger.warning(
@@ -156,8 +158,12 @@ def save_youtube_data(new_data):
                 show_id, len(entries), len(existing),
             )
 
+    # lastUpdated moves only when stored data does (see save_reconciled_data)
+    if not changed and current["scrapeStatus"].get("youtube") == "ok":
+        return
     current["streaming"] = streaming
-    current["lastUpdated"] = datetime.now(timezone.utc).isoformat()
+    if changed:
+        current["lastUpdated"] = datetime.now(timezone.utc).isoformat()
     current["scrapeStatus"]["youtube"] = "ok"
 
     from file_utils import atomic_json_write

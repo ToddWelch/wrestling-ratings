@@ -71,7 +71,7 @@ season methodology question above.
 SmackDown has averaged **1.24 million** viewers across its 42 episodes from Jan 2
 to Oct 16, 2026. Over the same stretch of 2025 it averaged **1.44 million**. That
 is a drop of about **14 percent**, and the 18-49 demo fell further, from 0.41 to
-0.29.
+0.28.
 
 The headline number hides a measurement change. Nielsen switched to its Big Data
 + Panel method on Sept 26, 2025. In the eight episodes before that date,
@@ -85,15 +85,18 @@ method. SmackDown is averaging **1.31 million** this October against 1.06 millio
 last October, an increase of about **23 percent**.
 
 Inside 2026, April was the high point: the show averaged 1.44 million that
-month, and the April 17 episode drew **1.58 million** with a 0.42 demo, the best
-of the year. The low was Jan 23 at 943,000. Two February episodes aired on SyFy
+month, and the April 17 episode drew **1.58 million** with a 0.42 demo, the most
+viewers of the year. The low was Jan 23 at 943,000. Two February episodes aired on SyFy
 (Feb 13 and Feb 20) and drew 1.04 and 1.10 million.
 
 The weekly chart shows the full run back to January 2025, with the measurement
 change marked.
 
 **Fact-check before publishing:** refresh the averages; keep the "football season"
-caveat; confirm the 2026-27 season methodology question.
+caveat; confirm the 2026-27 season methodology question. The source's notes
+column marks April 3 (1.508 million, 0.43 demo) as "Highest Viewership of 2026",
+written before April 17 beat it; April 3 has the higher demo, so say "most
+viewers" for April 17 rather than "best".
 
 ---
 
@@ -134,30 +137,34 @@ question.
 ## 4. TNA iMPACT on AMC
 
 - **Title:** TNA iMPACT on AMC: Ten Months of Ratings
-- **Meta description:** TNA iMPACT has averaged 217,000 viewers across 37 episodes on AMC in 2026. The best week, the weakest week, and how the year has trended.
+- **Meta description:** TNA iMPACT has averaged 217,000 viewers on AMC in 2026 across the 37 weeks with published numbers. The best weeks, the gaps, and the trend.
 - **Target search phrase:** tna impact ratings amc
 - **URL slug:** /reports/tna-impact-ratings-amc-2026
 
-TNA iMPACT moved to AMC in January 2026. Through Oct 15, it has aired **37
-episodes** there and averaged **217,000** viewers with a 0.04 rating in the 18-49
-demo.
+TNA iMPACT moved to AMC in January 2026. Through Oct 15, **37 of its weeks** there
+have published numbers, and they average **217,000** viewers with a 0.04 rating in
+the 18-49 demo. Three weeks have no number: July 2 and July 9 are listed as "did
+not make top 100", and nothing was reported for Aug 27. Those weeks
+were likely lower than the rest, so the true average is a little under 217,000.
 
 The show started at 173,000 on Jan 15, then climbed through the winter. February
 and March averaged 240,000 and 254,000. Spring was the soft patch: May averaged
-183,000, and May 7 was the lowest week of the year at **164,000**.
+183,000, and May 7 was the lowest reported week at **164,000**.
 
-Summer brought it back. July averaged 256,000, the best month so far, and the
-July 23 episode drew **307,000**, the only week above 300,000. Since then the show
-has held between 176,000 and 252,000; the Oct 15 episode drew 252,000.
+July was the most uneven month. It opened with the two weeks outside the top
+100, then produced the year's two best numbers: 286,000 on July 16 and **307,000**
+on July 23, the only week above 300,000. Since then the show has held between
+176,000 and 252,000; the Oct 15 episode drew 252,000.
 
 For scale, AEW Collision averaged 405,000 over the same months, and Dynamite
-657,000. TNA's audience is smaller, but it has been steady, and it has not had a
-week under 160,000.
+657,000. TNA's audience is smaller, and outside July it has stayed in a fairly
+narrow band.
 
 Every TNA week on AMC is on the chart alongside the WWE and AEW shows.
 
 **Fact-check before publishing:** refresh the averages; confirm the AMC debut date
-and that no TNA episode aired elsewhere in 2026.
+and that no TNA episode aired elsewhere in 2026; confirm what "top 100" refers
+to (the source does not say) before describing it further.
 
 ---
 
@@ -179,13 +186,13 @@ SmackDown, NXT or AEW, which measure US viewers.
 The spring was strong. March and April averaged 2.94 and 2.98 million, and the
 April 20 episode reached **3.3 million**, the best week of 2026. Summer was the
 low point: June averaged 2.28 million, and June 1 drew **2.0 million**, the
-weakest week of the year.
+weakest week with published numbers.
 
 Since August, Raw has mostly held between 2.4 and 2.7 million, with one jump to
 3.1 million on Sept 14. October is averaging
-2.47 million, nearly identical to October 2025 (2.43 million). Netflix did not
-publish numbers for two January weeks (Jan 12 and Jan 26), so those weeks are
-missing from both the average and the chart.
+2.47 million, nearly identical to October 2025 (2.43 million). There are no
+numbers for three weeks (Jan 12, Jan 26 and Aug 31, a pre-taped episode), so
+those weeks are missing from both the average and the chart.
 
 See every Raw week on the streaming chart.
 
