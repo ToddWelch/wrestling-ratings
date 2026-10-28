@@ -46,6 +46,16 @@ RAW_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Table layout cells: "Jan 5" and "1.175 M" / "0.899" (period is the decimal here)
+HEADING_TAGS = ["h2", "h3", "h4"]
+TABLE_DATE_RE = re.compile(r"^([A-Za-z]{3,9})\.?\s+(\d{1,2})$")
+TABLE_NUMBER_RE = re.compile(r"^(\d+(?:[.,]\d+)?)\s*M?$", re.IGNORECASE)
+
+
+class ScrapeError(Exception):
+    """A source was reachable but did not yield the data we expect from it."""
+
+
 # Expected viewership ranges per show (in millions) for sanity checks
 VIEWERSHIP_RANGES = {
     "smackdown": (0.5, 2.5),
@@ -187,73 +197,182 @@ def validate_entries(entries, show_id):
     return valid
 
 
-def scrape_nielsen():
-    """Scrape all Nielsen data from WrestlingAttitude using DOM parsing."""
-    logger.info("Starting Nielsen scrape")
-    all_data = {show_id: [] for show_id in NIELSEN_HEADERS.values()}
+def extract_table_sections(soup):
+    """Extract per-show table rows from the table layout.
+
+    The 2026 page moved to this layout during 2026:
+      <h3>WWE SmackDown (Million Viewers)</h3>
+      <figure><table>... Date | Viewership | Key Demo (18-49) | Notes ...</table></figure>
+
+    Returns {header_text: [[cell, ...], ...]} with header rows dropped.
+    Only the first table before the next heading belongs to a show.
+    """
+    sections = {}
+    for node in soup.find_all(string=lambda t: t and "Million Viewers" in t):
+        header = node.find_parent(HEADING_TAGS)
+        if not header:
+            continue  # paragraph layout; extract_sections_from_dom handles it
+
+        rows = []
+        for sib in header.find_next_siblings():
+            if sib.name in HEADING_TAGS:
+                break
+            table = sib if sib.name == "table" else sib.find("table")
+            if table:
+                for tr in table.find_all("tr"):
+                    cells = [td.get_text(" ", strip=True) for td in tr.find_all("td")]
+                    if cells:
+                        rows.append(cells)
+                break
+
+        sections[header.get_text(" ", strip=True)] = rows
+    return sections
+
+
+def parse_table_date(cell, year):
+    """'Jan 5' -> '2026-01-05'. Returns None when the cell is not a date."""
+    match = TABLE_DATE_RE.match(cell.strip())
+    if not match:
+        return None
+    month = MONTHS.get(match.group(1)[:3].title())
+    if not month:
+        return None
+    return f"{year}-{month:02d}-{int(match.group(2)):02d}"
+
+
+def parse_table_number(cell):
+    """'1.175 M' or '0.899' -> float. Returns None for 'NO DATA' or blank."""
+    match = TABLE_NUMBER_RE.match(cell.strip())
+    if not match:
+        return None
+    return parse_viewer_number(match.group(1))
+
+
+def extract_nielsen_rows(rows, year):
+    """Turn table rows (Date, Viewership, Key Demo, Notes) into entries."""
+    entries = []
+    for cells in rows:
+        date = parse_table_date(cells[0], year) if cells else None
+        viewers = parse_table_number(cells[1]) if len(cells) > 1 else None
+        demo = parse_table_number(cells[2]) if len(cells) > 2 else None
+        if date and viewers is not None and demo is not None:
+            entries.append({"date": date, "viewers": viewers, "demo": round(demo, 2)})
+        elif not _is_no_data_row(cells):
+            logger.warning("Unparseable Nielsen table row (%d): %s", year, cells)
+    return entries
+
+
+def extract_raw_rows(rows, year):
+    """Turn Raw table rows (Date, Global Views, Hours Viewed, Notes) into entries."""
+    entries = []
+    for cells in rows:
+        date = parse_table_date(cells[0], year) if cells else None
+        viewers = parse_table_number(cells[1]) if len(cells) > 1 else None
+        if date and viewers is not None:
+            entries.append({"date": date, "viewers": viewers})
+        elif not _is_no_data_row(cells):
+            logger.warning("Unparseable Raw table row (%d): %s", year, cells)
+    return entries
+
+
+def _is_no_data_row(cells):
+    """The source marks weeks without published numbers as 'NO DATA'."""
+    return any("NO DATA" in c.upper() for c in cells[1:])
+
+
+def _dedupe_by_date(entries):
+    seen = set()
+    unique = []
+    for e in entries:
+        if e["date"] not in seen:
+            seen.add(e["date"])
+            unique.append(e)
+    return unique
+
+
+def _show_id_for(header_text):
+    for header_prefix, sid in NIELSEN_HEADERS.items():
+        if header_prefix.lower() in header_text.lower():
+            return sid
+    return None
+
+
+def _raw_paragraph_content(soup, content):
+    """The Raw header <p> in the paragraph layout carries data inline; include it."""
+    for node in soup.find_all(string=lambda t: t and RAW_HEADER in t):
+        p = node
+        while p and getattr(p, 'name', None) != 'p':
+            p = p.parent
+        if p:
+            return p.get_text() + " " + content
+    return content
+
+
+def parse_page(soup, year):
+    """Parse one WrestlingAttitude year page in either layout.
+
+    Returns (nielsen, raw, sections_found). Each show's entries are
+    range-checked and deduplicated by date.
+    """
+    nielsen = {show_id: [] for show_id in NIELSEN_HEADERS.values()}
+    raw = []
+
+    paragraph_sections = extract_sections_from_dom(soup)
+    table_sections = extract_table_sections(soup)
+
+    for header_text, content in paragraph_sections.items():
+        if RAW_HEADER.lower() in header_text.lower():
+            raw.extend(extract_raw_entries(_raw_paragraph_content(soup, content), year))
+        elif (show_id := _show_id_for(header_text)):
+            nielsen[show_id].extend(extract_nielsen_entries(content, year))
+
+    for header_text, rows in table_sections.items():
+        if RAW_HEADER.lower() in header_text.lower():
+            raw.extend(extract_raw_rows(rows, year))
+        elif (show_id := _show_id_for(header_text)):
+            nielsen[show_id].extend(extract_nielsen_rows(rows, year))
+
+    for show_id in nielsen:
+        nielsen[show_id] = validate_entries(nielsen[show_id], show_id)
+        logger.info("Parsed %d valid entries for %s (%d)", len(nielsen[show_id]), show_id, year)
+    raw = _dedupe_by_date(raw)
+    logger.info("Parsed %d Raw entries (%d)", len(raw), year)
+
+    return nielsen, raw, len(paragraph_sections) + len(table_sections)
+
+
+def scrape_wrestlingattitude():
+    """Scrape Nielsen and Raw (Netflix) data from every WrestlingAttitude year page.
+
+    Each page is fetched once. Raises ScrapeError when any page cannot be
+    fetched or yields no show sections, so a layout change shows up as a
+    failed scrape instead of a quiet drop in data.
+
+    Returns (nielsen, raw).
+    """
+    logger.info("Starting WrestlingAttitude scrape")
+    nielsen = {show_id: [] for show_id in NIELSEN_HEADERS.values()}
+    raw = []
+    problems = []
 
     for year, url in URLS.items():
         try:
             soup = fetch_page(url)
         except Exception as e:
             logger.error("Failed to fetch %s: %s", url, e)
+            problems.append(f"{year} page fetch failed: {e}")
             continue
 
-        sections = extract_sections_from_dom(soup)
-        logger.info("Found %d sections on %d page", len(sections), year)
-
-        for header_text, content in sections.items():
-            # Match header to show ID
-            show_id = None
-            for header_prefix, sid in NIELSEN_HEADERS.items():
-                if header_prefix.lower() in header_text.lower():
-                    show_id = sid
-                    break
-
-            if show_id:
-                entries = extract_nielsen_entries(content, year)
-                entries = validate_entries(entries, show_id)
-                all_data[show_id].extend(entries)
-                logger.info("Parsed %d valid entries for %s (%d)", len(entries), show_id, year)
-
-    return all_data
-
-
-def scrape_raw():
-    """Scrape WWE Raw Netflix data from WrestlingAttitude using DOM parsing."""
-    logger.info("Starting Raw (Netflix) scrape")
-    raw_data = []
-
-    for year, url in URLS.items():
-        try:
-            soup = fetch_page(url)
-        except Exception as e:
-            logger.error("Failed to fetch %s: %s", url, e)
+        page_nielsen, page_raw, sections_found = parse_page(soup, year)
+        if not sections_found:
+            logger.error("No show sections found on %s", url)
+            problems.append(f"{year} page has no recognizable show sections")
             continue
 
-        sections = extract_sections_from_dom(soup)
+        for show_id, entries in page_nielsen.items():
+            nielsen[show_id].extend(entries)
+        raw.extend(page_raw)
 
-        for header_text, content in sections.items():
-            if RAW_HEADER.lower() in header_text.lower():
-                # Raw header <p> also contains inline text; include it
-                header_nodes = soup.find_all(string=lambda t: t and RAW_HEADER in t)
-                for node in header_nodes:
-                    p = node
-                    while p and getattr(p, 'name', None) != 'p':
-                        p = p.parent
-                    if p:
-                        content = p.get_text() + " " + content
-                        break
-
-                entries = extract_raw_entries(content, year)
-                # Remove duplicates by date
-                seen = set()
-                unique = []
-                for e in entries:
-                    if e["date"] not in seen:
-                        seen.add(e["date"])
-                        unique.append(e)
-                raw_data.extend(unique)
-                logger.info("Parsed %d Raw entries (%d)", len(unique), year)
-
-    return raw_data
+    if problems:
+        raise ScrapeError("; ".join(problems))
+    return nielsen, raw

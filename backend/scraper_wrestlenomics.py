@@ -7,6 +7,8 @@ from pathlib import Path
 import requests
 from bs4 import BeautifulSoup
 
+from scraper import ScrapeError
+
 logger = logging.getLogger(__name__)
 
 DATA_DIR = Path(__file__).parent / "data"
@@ -49,10 +51,14 @@ STREAMING_URL_RE = re.compile(
     r"-(\w{3})-(\d{1,2})-on-netflix-(\d+)-global-views",
 )
 
+# Article paths: /tv-ratings/2026/... (until mid-2026), now /articles/2026/...
+ARTICLE_YEAR_RE = re.compile(r"/(?:tv-ratings|articles)/(\d{4})/")
+
 
 def fetch_article_urls():
     """Fetch all TV ratings article URLs from Wrestlenomics category pages."""
     urls = []
+    failed_pages = 0
     for cat_url in CATEGORY_URLS:
         try:
             resp = requests.get(cat_url, timeout=30, headers={
@@ -63,20 +69,24 @@ def fetch_article_urls():
 
             for link in soup.find_all("a", href=True):
                 href = link["href"]
-                if "/tv-ratings/20" in href and "rating" in href:
+                if ARTICLE_YEAR_RE.search(href) and "rating" in href:
                     if href not in urls:
                         urls.append(href)
 
         except Exception as e:
+            failed_pages += 1
             logger.warning("Failed to fetch Wrestlenomics category page %s: %s", cat_url, e)
+
+    if failed_pages == len(CATEGORY_URLS):
+        raise ScrapeError("every Wrestlenomics category page failed to load")
 
     logger.info("Found %d Wrestlenomics article URLs", len(urls))
     return urls
 
 
 def parse_year_from_url(url):
-    """Extract year from URL like /tv-ratings/2026/..."""
-    match = re.search(r"/tv-ratings/(\d{4})/", url)
+    """Extract year from URL like /articles/2026/... or /tv-ratings/2026/..."""
+    match = ARTICLE_YEAR_RE.search(url)
     return int(match.group(1)) if match else None
 
 
@@ -169,5 +179,12 @@ def scrape_wrestlenomics():
     for show_id, entries in streaming.items():
         entries.sort(key=lambda e: e["date"])
         logger.info("Wrestlenomics: %d streaming entries for %s", len(entries), show_id)
+
+    total = sum(len(v) for v in nielsen.values()) + sum(len(v) for v in streaming.values())
+    if total == 0:
+        raise ScrapeError(
+            f"Wrestlenomics returned {len(urls)} article links but none parsed "
+            "into ratings (URL format changed?)"
+        )
 
     return {"nielsen": nielsen, "streaming": streaming}

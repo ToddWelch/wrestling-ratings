@@ -10,13 +10,18 @@ DATA_DIR = Path(__file__).parent / "data"
 RATINGS_FILE = DATA_DIR / "ratings.json"
 
 # Channel upload playlist IDs (UU + channel ID minus UC prefix)
-CHANNELS = {
+# ROH is switched off (2026-10-28). Its YouTube uploads are single matches and
+# segments; full ROH TV episodes air on HonorClub. The title filter accepted
+# 32 such uploads in one month, so the chart would have shown clip views as
+# weekly viewership. Move it back into CHANNELS once a real episode metric exists.
+DISABLED_CHANNELS = {
     "roh": {
         "playlist": "UU4_uDa6w1kOyzsikIzReCKQ",
         "patterns": ["ROH", "Ring of Honor"],
         "name": "ROH",
     },
 }
+CHANNELS = {}
 
 
 def get_youtube_service():
