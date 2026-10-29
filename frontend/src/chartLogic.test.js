@@ -2,6 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { yAxisScale, rankPayload, buildLeaderboard } from "./chartLogic.js";
+import { weekOf } from "./shows.js";
 
 /* ======= yAxisScale ======= */
 
@@ -14,9 +15,9 @@ test("viewers: a whole-number peak stays put", () => {
   assert.equal(yAxisScale([{ raw: 4 }], ["raw"], "viewers").top, 4);
 });
 
-test("viewers: hidden series do not count", () => {
+test("viewers: hidden series do not count, and a low top gets half-million gridlines", () => {
   const rows = [{ raw: 5.9, smackdown: 1.58, tna: 0.3 }];
-  assert.equal(yAxisScale(rows, ["smackdown", "tna"], "viewers").top, 2);
+  assert.deepEqual(yAxisScale(rows, ["smackdown", "tna"], "viewers"), { top: 2, ticks: [0, 0.5, 1, 1.5, 2] });
 });
 
 test("viewers: above 4 bumps to 5 or 6", () => {
@@ -34,7 +35,7 @@ test("demo: float noise does not add a step", () => {
 });
 
 test("no visible data still gives a usable axis", () => {
-  assert.equal(yAxisScale([], ["raw"], "viewers").top, 1);
+  assert.deepEqual(yAxisScale([], ["raw"], "viewers"), { top: 1, ticks: [0, 0.5, 1] });
   assert.equal(yAxisScale([{ raw: null }], ["raw"], "demo").top, 0.1);
 });
 
@@ -113,9 +114,60 @@ test("a show with no number that week is left out, not waited for", () => {
   assert.ok(!board.ranked.some((r) => r.id === "tna"));
 });
 
-test("a show silent for over 5 weeks does not hold the week back", () => {
-  const ended = { ...nielsen, tna: [{ date: "2026-08-20", viewers: 0.188, demo: 0.02 }] };
-  assert.equal(buildLeaderboard(ended, raw, "viewers").week, "2026-10-12");
+test("a show last reported 2 weeks before the newest data still holds the week", () => {
+  // Newest data is the week of Oct 19; Oct 5 is exactly 2 weeks earlier
+  const late = { ...nielsen, tna: [{ date: "2026-10-08", viewers: 0.214, demo: 0.03 }] };
+  assert.equal(buildLeaderboard(late, raw, "viewers").week, "2026-10-05");
+});
+
+test("a show silent for more than 2 weeks does not hold the week back", () => {
+  const quiet = { ...nielsen, tna: [{ date: "2026-10-01", viewers: 0.182, demo: 0.02 }] };
+  const board = buildLeaderboard(quiet, raw, "viewers");
+  assert.equal(board.week, "2026-10-12");
+  assert.ok(!board.ranked.some((r) => r.id === "tna"));
+});
+
+/* ======= time zones ======= */
+
+// weekOf must give the same Monday wherever the browser is; it once returned
+// the Sunday for anyone east of UTC. Node honours a runtime TZ change.
+const ZONES = ["America/Los_Angeles", "UTC", "Europe/London", "Asia/Tokyo", "Pacific/Kiritimati"];
+const WEEKS = {
+  "2026-10-12": "2026-10-12", // Monday
+  "2026-10-18": "2026-10-12", // Sunday
+  "2026-03-08": "2026-03-02", // US clocks change
+  "2026-03-29": "2026-03-23", // EU clocks change
+  "2026-10-25": "2026-10-19", // EU clocks change back
+  "2026-11-01": "2026-10-26", // US clocks change back
+  "2026-01-01": "2025-12-29", // across the new year
+};
+
+function inZone(zone, fn) {
+  const saved = process.env.TZ;
+  process.env.TZ = zone;
+  try { return fn(); } finally {
+    if (saved === undefined) delete process.env.TZ; else process.env.TZ = saved;
+  }
+}
+
+test("weekOf gives the same Monday in every time zone", () => {
+  for (const zone of ZONES) {
+    inZone(zone, () => {
+      for (const [date, monday] of Object.entries(WEEKS)) {
+        assert.equal(weekOf(date), monday, `${date} in ${zone}`);
+      }
+    });
+  }
+});
+
+test("leaderboard week and ranking are the same in every time zone", () => {
+  for (const zone of ZONES) {
+    inZone(zone, () => {
+      const board = buildLeaderboard(nielsen, raw, "viewers");
+      assert.equal(board.week, "2026-10-12", zone);
+      assert.deepEqual(board.ranked.map((r) => r.id), ["smackdown", "nxt", "dynamite", "collision", "tna"], zone);
+    });
+  }
 });
 
 test("no data gives no leaderboard", () => {

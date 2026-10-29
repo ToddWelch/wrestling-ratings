@@ -4,7 +4,8 @@ import { NIELSEN_SHOWS, RAW_SHOW, weekOf } from "./shows.js";
 
 // Top of the weekly chart's y-axis: the highest value in view, rounded up to
 // the next whole million for viewers (3.9 -> 4) or the next 0.1 for the demo,
-// so the lines spread across the full chart height.
+// so the lines spread across the full chart height. Viewer gridlines fall on
+// half millions when the top is 2 or less, so the low lines keep references.
 export function yAxisScale(rows, keys, metric) {
   const step = metric === "demo" ? 0.1 : 1;
   let max = 0;
@@ -15,10 +16,11 @@ export function yAxisScale(rows, keys, metric) {
     }
   }
   // The epsilon keeps float noise (0.30000000000000004) from adding a step
-  const steps = Math.max(1, Math.ceil(max / step - 1e-9));
+  const top = Math.max(1, Math.ceil(max / step - 1e-9)) * step;
+  const tickStep = metric === "viewers" && top <= 2 ? 0.5 : step;
   const ticks = [];
-  for (let i = 0; i <= steps; i++) ticks.push(Number((i * step).toFixed(1)));
-  return { top: ticks[ticks.length - 1], ticks };
+  for (let i = 0; i * tickStep <= top + 1e-9; i++) ticks.push(Number((i * tickStep).toFixed(1)));
+  return { top: Number(top.toFixed(1)), ticks };
 }
 
 /* ======= TOOLTIP ORDER ======= */
@@ -31,8 +33,10 @@ export function rankPayload(payload) {
 /* ======= LEADERBOARD ======= */
 
 // A show that last reported more than this many weeks before the newest data
-// (ended, on hiatus) no longer holds the leaderboard back.
-const ACTIVE_WEEKS = 5;
+// (ended, on hiatus, late) no longer holds the leaderboard back. Short on
+// purpose: a dropped show's number rejoins its week as soon as it arrives,
+// while a long window kept the board weeks stale behind one quiet show.
+const ACTIVE_WEEKS = 2;
 
 function newestWeek(entries) {
   let newest = null;

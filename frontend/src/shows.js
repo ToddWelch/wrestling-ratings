@@ -26,11 +26,12 @@ export function toTs(dateStr) {
   return new Date(dateStr + "T00:00:00").getTime();
 }
 
-// Get the Monday of the week for a given date string
+// Get the Monday of the week for a given date string. All in UTC: mixing a
+// local-time weekday with toISOString() returned the Sunday for anyone east
+// of UTC.
 export function weekOf(dateStr) {
-  const d = new Date(dateStr + "T00:00:00");
-  const day = d.getDay(); // 0=Sun, 1=Mon, ...
-  const diff = day === 0 ? -6 : 1 - day; // shift to Monday
-  d.setDate(d.getDate() + diff);
-  return d.toISOString().split("T")[0];
+  const d = new Date(dateStr + "T00:00:00Z");
+  const day = d.getUTCDay(); // 0=Sun, 1=Mon, ...
+  d.setUTCDate(d.getUTCDate() + (day === 0 ? -6 : 1 - day)); // shift to Monday
+  return d.toISOString().slice(0, 10);
 }
