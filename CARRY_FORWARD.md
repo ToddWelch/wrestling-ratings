@@ -28,25 +28,19 @@ Remove an item only when the PR that fixes it merges.
    threads; `/api/reset-data` deletes the file first. Route both through the
    scheduler (`add_job(..., next_run_time=now)`) and have reset scrape before
    it swaps the file.
-3. **Railway config-file cutoff 2026-12-01** (Crash Override, second pass).
-   Railway stops honoring `railway.toml`; the service setting underneath is
-   the Railpack builder with no health check. Pin builder = Dockerfile and the
-   health check in service settings, or migrate to `.railway/railway.ts`.
-   Production config change: Todd's approval. Decision 5 on the 2026-10-28
-   review page.
-4. **Outside dead-man check** (Crash Override): alert when
+3. **Outside dead-man check** (Crash Override): alert when
    `/api/scrape-status` `lastScrape` is older than about 7 hours; it catches
-   any way the scheduler stops, including the one above, where the alerting
-   itself would be gone.
-5. **Exact column-header match** (Crash Override note): `_column_indexes`
+   any way the scheduler stops (for example a build that skips the Dockerfile),
+   where the in-app alerting itself would be gone.
+4. **Exact column-header match** (Crash Override note): `_column_indexes`
    takes the first header containing the text, so a "Prev Viewership" column
    placed first would be read instead.
-6. **Wrestlenomics page-1 failure** (gate M-4): fail when the newest category
+5. **Wrestlenomics page-1 failure** (gate M-4): fail when the newest category
    page fails, not only when all three do.
-7. **Open tabs never show a failure** (Crash Override note):
+6. **Open tabs never show a failure** (Crash Override note):
    `frontend/src/App.jsx` refreshes the status cards only when `lastUpdated`
    changes, which no longer happens during an outage.
-8. **`SCRAPE_KEY` compared with `!=`** (gate M-3): use `hmac.compare_digest`.
+7. **`SCRAPE_KEY` compared with `!=`** (gate M-3): use `hmac.compare_digest`.
 
 ## With the on-page SEO fixes (`docs/seo/on-page-fixes-2026-10.md`)
 
