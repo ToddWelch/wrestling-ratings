@@ -2,6 +2,28 @@
 
 Newest first. Never delete entries.
 
+## 2026-10-29: Railway IaC applied and merged; revive complete
+
+### Done
+1. **Gate on the IaC PR:** fresh-eyes Sonnet, prompt `scratch/fresh-eyes-prompt-railway-iac-2026-10-28.md`, findings `scratch/fresh-eyes-review-railway-iac-2026-10-28.md`: 0 BLOCKING, 1 IMPORTANT, 1 MINOR. Cleared. IMPORTANT (merging before apply drops the build to Railpack) is AGREE and handled by the rollout order. MINOR (10 s health-check headroom) is AGREE and deferred: it matches the old setting and every deploy passed.
+2. **Crash Override approved `e6c8943`** with the pinned plan `scratch/railway-plan.json` (CLI 5.47.2, `destructive: false`, 2 `resource.update`, `sourceTree` = `e6c8943:.railway`).
+3. **Applied** with `railway config apply --plan scratch/railway-plan.json --yes` (no `--confirm-destructive`), approved by Todd in session. Before and after on the service: `dockerfilePath` null to `Dockerfile`, `healthcheckPath` null to `/api/health`, `healthcheckTimeout` null to 10. Every other field read was unchanged (`ipv6EgressEnabled`, restart policy, source and others), and the variable names were unchanged. The legacy `serviceInstance.builder` field still reads `RAILPACK`, while the config graph says `DOCKERFILE` and `plan --detailed-exit-code` exits 0. Apply redeploy `107955d8` SUCCESS; scrapes at 00:04:57Z.
+4. **Merged PR #2** with Todd's OK, pinned to `e6c8943`, as merge commit `4a25716`. Deployment `9742bada`, the first without `railway.toml`: `configFile` none, builder DOCKERFILE, `dockerfilePath` Dockerfile, health check `/api/health` 10 s, region us-east4-eqdc4a, SUCCESS. Both sources scraped at 10:18:14Z, after the deploy. **The 2026-12-01 cutoff is closed.**
+
+### State
+- Live: `https://wrestlingratings.welchcommercesystems.com`, data through SmackDown 2026-10-23, scheduler every 6 h.
+- Railway settings are code (`.railway/railway.ts`); see CLAUDE.md before changing them. The repo directory is `railway link`ed to the project (local CLI config only), so `railway config plan` works from the repo root.
+- Todd's decisions still to build: report pages at `/reports/<slug>` for the post drafts, then the on-page SEO fixes (`docs/seo/`).
+- Not committed by design: `/home/todd/.claude/infrastructure-access.md` (token widening record) and `/home/todd/.claude/logs/gate-catches.md` (one entry; that file's diff also holds other sessions' entries). That repo takes changes through its snapshot or a PR.
+
+### Next
+1. `CARRY_FORWARD.md` item 1 (merge stored data by date, with a removal rule) and the rest of that list.
+2. On-page SEO fixes, ROH out of the UI, then `/reports/<slug>` pages and the posts after Todd's edits.
+3. Slack test alert, only with Todd's OK. The webhook-in-logs fix is already live.
+
+### Estimate vs actual
+No estimate up front. Agent compute time across 2026-10-28 and 29 is about 5 hours, including two PRs, three review rounds and two gates.
+
 ## 2026-10-28 (later): Deployed, region moved, DNS live, Railway IaC migration
 
 Todd's decisions (review page, pasted back): deploy yes; region us-east4; posts at `/reports/<slug>` on this site; Railway "the permanent fix"; ROH off. In chat: remove the push deny rule, widen the Cloudflare token, IaC as the next PR.
