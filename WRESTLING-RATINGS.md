@@ -29,7 +29,7 @@ wrestling-ratings/
     vite.config.js
   Dockerfile
   requirements.txt
-  railway.toml
+  railway.toml          (superseded 2026-10-28 by .railway/railway.ts)
   .gitignore
   README.md
 ```
@@ -375,6 +375,8 @@ google-api-python-client==2.166.0
 ```
 
 ### railway.toml
+
+**Superseded 2026-10-28** by `.railway/railway.ts` (Railway stops reading `railway.toml` on 2026-12-01). Do not re-add this file; see CLAUDE.md "Railway settings are code". Kept below as the original spec.
 
 ```toml
 [build]

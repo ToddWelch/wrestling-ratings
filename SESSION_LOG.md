@@ -16,7 +16,14 @@ Todd's decisions (review page, pasted back): deploy yes; region us-east4; posts 
 7. **Railway IaC** (branch `chore/railway-iac-migration`): `.railway/railway.ts` declares service `wrestling-ratings` with the Dockerfile builder, the `/api/health` check (10 s), one replica in us-east4, and the variables as `preserve()`. `railway.toml` removed. `railway config plan`: 0 add, 2 change (builder null to DOCKERFILE; health check null to /api/health, 10), 0 destroy. `railway config migrate` was NOT used as generated: it named the service "Wrestling Ratings", which would likely have created a second service, and it dropped the Dockerfile setting to a comment.
 
 ### In progress / state
-- IaC PR: Crash Override review, then the cross-model gate (event 1, first write through the IaC path), then `railway config apply`, then merge. **Apply must come before the merge**: the merge deploy reads service settings once `railway.toml` is gone, and the setting underneath is RAILPACK.
+- IaC PR #2: Crash Override APPROVED WITH NOTES on `70b8dd9`; its doc notes are folded in (the file is the complete desired state, omit = delete; stale DNS line; exact package pin with `npm ci`; `WRESTLING-RATINGS.md` marks `railway.toml` superseded). Rollout:
+  1. pinned plan (`railway config plan --out`, CLI 5.47.2) at the final head;
+  2. cross-model gate on that plan (event 1, first write through the IaC path);
+  3. `railway config apply --plan <file>`, approved by Todd in chat ("apply only after the plan shows it updates wrestling-ratings and creates nothing"). Apply most likely redeploys `c520d8d`;
+  4. verify that deploy and that `railway config plan --detailed-exit-code` exits 0;
+  5. **Todd's OK before the merge** (the PR declares the service's variable list);
+  6. merge, then verify the deployment's builder is DOCKERFILE, the health check is set, there is no `configFile`, and `/api/scrape-status` `lastScrape` is after the deploy.
+  **Apply must come before the merge**: once `railway.toml` is gone, the merge deploy reads service settings, and the setting underneath is RAILPACK.
 - Railway still shows the custom domain's certificate as "issuing" with DNS "requires update". It may lag; the site already serves over Cloudflare. The WCS apex, proxied the same way, shows VALID and PROPAGATED.
 
 ### Next

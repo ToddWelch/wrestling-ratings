@@ -3,6 +3,6 @@
   "private": true,
   "description": "Railway infrastructure-as-code for this project (.railway/railway.ts). Not part of the app build.",
   "dependencies": {
-    "railway": "^3.16.0"
+    "railway": "3.16.0"
   }
 }
