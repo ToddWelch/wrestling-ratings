@@ -3,26 +3,11 @@ import {
   LineChart, Line, XAxis, YAxis, Tooltip,
   ResponsiveContainer, CartesianGrid, ReferenceLine,
 } from "recharts";
-
-/* ======= SHOW CONFIG ======= */
-const NIELSEN_SHOWS = [
-  { id: "smackdown", name: "SmackDown", color: "#60A5FA", network: "USA/SyFy", day: "Fri" },
-  { id: "nxt", name: "NXT", color: "#FACC15", network: "CW", day: "Tue" },
-  { id: "dynamite", name: "Dynamite", color: "#EF4444", network: "TBS", day: "Wed" },
-  { id: "collision", name: "Collision", color: "#F472B6", network: "TNT", day: "Sat" },
-  { id: "tna", name: "TNA iMPACT", color: "#22C55E", network: "AMC", day: "Thu" },
-];
-
-const RAW_SHOW = { id: "raw", name: "WWE Raw", color: "#DC2626", network: "Netflix", day: "Mon" };
-
-const STREAMING_SHOWS = [
-  { id: "raw", name: "WWE Raw", color: "#DC2626", platform: "Netflix", metric: "Global Views (M)" },
-  { id: "roh", name: "ROH", color: "#F97316", platform: "HonorClub/YT", metric: "YouTube Views (K)" },
-];
+import { NIELSEN_SHOWS, RAW_SHOW, STREAMING_SHOWS, MO, fmtDate, toTs, weekOf } from "./shows.js";
+import { yAxisScale, rankPayload, buildLeaderboard } from "./chartLogic.js";
+import Leaderboard from "./Leaderboard.jsx";
 
 /* ======= HELPERS ======= */
-const MO = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
 function fmtTimeAgo(date) {
   const s = Math.floor((Date.now() - date.getTime()) / 1000);
   if (s < 60) return "just now";
@@ -32,15 +17,6 @@ function fmtTimeAgo(date) {
   if (h < 24) return `${h}h ago`;
   const d = Math.floor(h / 24);
   return `${d}d ago`;
-}
-
-function fmtDate(v) {
-  const d = v instanceof Date ? v : typeof v === "number" ? new Date(v) : new Date(v + "T00:00:00");
-  return `${MO[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
-}
-
-function toTs(dateStr) {
-  return new Date(dateStr + "T00:00:00").getTime();
 }
 
 function fmtLabel(ts, weekly) {
@@ -88,15 +64,6 @@ function filterRange(data, range) {
 }
 
 /* ======= TRANSFORM API DATA TO CHART FORMAT ======= */
-
-// Get the Monday of the week for a given date string
-function weekOf(dateStr) {
-  const d = new Date(dateStr + "T00:00:00");
-  const day = d.getDay(); // 0=Sun, 1=Mon, ...
-  const diff = day === 0 ? -6 : 1 - day; // shift to Monday
-  d.setDate(d.getDate() + diff);
-  return d.toISOString().split("T")[0];
-}
 
 function transformNielsen(nielsen, streaming) {
   if (!nielsen) return [];
@@ -157,7 +124,7 @@ function Tip({ active, payload, label, metric }) {
       padding: "10px 14px", fontSize: 12, fontFamily: "monospace",
     }}>
       <div style={{ color: "#8acca0", marginBottom: 6, fontWeight: 700, fontSize: 13 }}>{fmtDate(label)}</div>
-      {payload.filter((p) => p.value != null).map((p, i) => (
+      {rankPayload(payload).map((p, i) => (
         <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "2px 0" }}>
           <span style={{ width: 8, height: 8, borderRadius: "50%", background: p.color, flexShrink: 0 }} />
           <span style={{ color: "#8acca0", flex: 1 }}>{p.name}</span>
@@ -181,6 +148,7 @@ export default function App() {
   const [streamingData, setStreamingData] = useState([]);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [scrapeDetails, setScrapeDetails] = useState({});
+  const [boardData, setBoardData] = useState({ nielsen: null, raw: null });
 
   const toggle = (id) => setShows((p) => ({ ...p, [id]: !p[id] }));
 
@@ -192,6 +160,7 @@ export default function App() {
       if (data.lastUpdated !== lastUpdated) {
         setNielsenData(transformNielsen(data.nielsen, data.streaming));
         setStreamingData(transformStreaming(data.streaming));
+        setBoardData({ nielsen: data.nielsen, raw: data.streaming?.raw });
         setLastUpdated(data.lastUpdated);
         if (data.scrapeDetails) setScrapeDetails(data.scrapeDetails);
       }
@@ -208,6 +177,18 @@ export default function App() {
 
   const fN = useMemo(() => filterRange(nielsenData, range), [nielsenData, range]);
   const fS = useMemo(() => filterRange(streamingData, range), [streamingData, range]);
+
+  // Y-axis top follows the highest visible line in the selected range
+  const yScale = useMemo(() => {
+    const keys = NIELSEN_SHOWS.filter((s) => shows[s.id]).map((s) => (metric === "demo" ? s.id + "_demo" : s.id));
+    if (metric === "viewers" && shows.raw) keys.push("raw");
+    return yAxisScale(fN, keys, metric);
+  }, [fN, shows, metric]);
+
+  const board = useMemo(
+    () => buildLeaderboard(boardData.nielsen, boardData.raw, metric),
+    [boardData, metric],
+  );
 
   const isWeekly = range === "1m" || range === "3m";
   const nielsenTicks = useMemo(() => pickTicks(fN, isWeekly), [fN, isWeekly]);
@@ -285,6 +266,9 @@ export default function App() {
         </div>
       </header>
 
+      {/* === LEADERBOARD (latest complete week) === */}
+      <Leaderboard board={board} metric={metric} />
+
       {/* === COMBINED VIEWERSHIP CHART === */}
       <section style={{ padding: "16px 12px 8px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, paddingLeft: 8, flexWrap: "wrap" }}>
@@ -308,7 +292,7 @@ export default function App() {
               stroke="#1a3a2a"
               angle={-45} textAnchor="end" height={50} />
             <YAxis tick={{ fill: "#6a9a7a", fontSize: 12, fontFamily: "monospace" }} stroke="#1a3a2a"
-              domain={metric === "demo" ? [0, 0.6] : [0, shows.raw ? 6.0 : 2.0]}
+              domain={[0, yScale.top]} ticks={yScale.ticks}
               tickFormatter={(v) => metric === "demo" ? v.toFixed(2) : v.toFixed(1)} />
             <Tooltip content={<Tip metric={metric} />} />
             <ReferenceLine x={toTs("2025-09-26")} stroke="#F59E0B44" strokeDasharray="4 4"
