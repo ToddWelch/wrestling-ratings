@@ -41,14 +41,23 @@ test("no visible data still gives a usable axis", () => {
 
 /* ======= rankPayload ======= */
 
-test("tooltip rows sort highest first and drop empty values", () => {
+test("tooltip rows sort highest first, drop empty values, and put Raw last", () => {
   const payload = [
-    { name: "NXT", value: 0.732 },
-    { name: "TNA iMPACT", value: null },
-    { name: "SmackDown", value: 1.327 },
-    { name: "Dynamite", value: 0.715 },
+    { dataKey: "nxt", name: "NXT", value: 0.732 },
+    { dataKey: "raw", name: "Raw (Netflix*)", value: 2.5 },
+    { dataKey: "tna", name: "TNA iMPACT", value: null },
+    { dataKey: "smackdown", name: "SmackDown", value: 1.327 },
+    { dataKey: "dynamite", name: "Dynamite", value: 0.715 },
   ];
-  assert.deepEqual(rankPayload(payload).map((p) => p.name), ["SmackDown", "NXT", "Dynamite"]);
+  assert.deepEqual(rankPayload(payload).map((p) => p.name), ["SmackDown", "NXT", "Dynamite", "Raw (Netflix*)"]);
+});
+
+test("demo tooltip keys sort normally (Raw has no demo line)", () => {
+  const payload = [
+    { dataKey: "nxt_demo", name: "NXT", value: 0.14 },
+    { dataKey: "smackdown_demo", name: "SmackDown", value: 0.32 },
+  ];
+  assert.deepEqual(rankPayload(payload).map((p) => p.name), ["SmackDown", "NXT"]);
 });
 
 /* ======= buildLeaderboard ======= */
