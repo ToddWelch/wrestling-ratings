@@ -25,9 +25,14 @@ export function yAxisScale(rows, keys, metric) {
 
 /* ======= TOOLTIP ORDER ======= */
 
-// Tooltip rows, highest value first, so the order reads as that week's ranking
+// Tooltip rows, highest value first, so the order reads as that week's ranking.
+// Raw (Netflix global views) always goes last: a different, larger metric
+// that would otherwise top every week (Todd, 2026-10-31; matches the leaderboard).
 export function rankPayload(payload) {
-  return payload.filter((p) => p.value != null).sort((a, b) => b.value - a.value);
+  const isRaw = (p) => p.dataKey === RAW_SHOW.id;
+  return payload
+    .filter((p) => p.value != null)
+    .sort((a, b) => isRaw(a) - isRaw(b) || b.value - a.value);
 }
 
 /* ======= LEADERBOARD ======= */
