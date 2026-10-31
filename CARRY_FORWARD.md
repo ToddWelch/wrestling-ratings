@@ -46,8 +46,31 @@ Remove an item only when the PR that fixes it merges.
 
 - **ROH still in the UI** (gate M-1, Crash Override note): toggle, line, note,
   schedule row, subtitle, SEO copy.
+- **Leaderboard as a real list** (Crash Override, PR #3 note 8): it is built
+  from `div`s; an `<ol>` or a `<table>` with header cells lets screen readers
+  read it as a ranking.
+- **Say when a show wasn't rated** (PR #3 note 7): a show with no number that
+  week just drops off the leaderboard; a muted "Not rated this week: X" line
+  would tell readers it isn't a bug.
+
+## Frontend (from PR #3 and #4 review)
+
+- **A completed week can still change** (PR #3 note 6): if a show airs twice
+  in one week (Collision has 3 such weeks), a later airing's number replaces
+  the earlier one on the chart and leaderboard.
+- **`App.jsx` is over the size limit** (465 code lines against 300; it was
+  477 before PR #3). Split the charts into components when next touched.
+- **Frontend tests don't run automatically.** No CI, and the Docker build
+  doesn't run `npm test` (its `src/**/*.test.js` glob also needs Node 21+,
+  while the Docker stage uses node:20).
+- **Streaming-chart tooltip** shares `Tip`, so Raw-last applies there too
+  (harmless now; once ROH has data, ROH would list above Raw). A `rawLast`
+  prop used only on the main chart limits it (PR #4 note).
 
 ## Before ROH (or any YouTube channel) is switched back on
+
+- **ROH values show with an "M" suffix** in the tooltip though they are
+  thousands of views (older than PR #3; Crash Override, PR #4).
 
 - **The YouTube API key can land in logs and on the public status card.** A
   `googleapiclient` `HttpError` carries the request URL, including the `key=`
