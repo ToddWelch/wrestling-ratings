@@ -129,6 +129,11 @@ test("leaderboard ranks by demo, ties broken by viewers, Raw unranked", () => {
   assert.deepEqual(board.unranked.map((r) => r.id), ["raw"]);
 });
 
+test("leaderboard rows carry the company name for WWE and AEW shows", () => {
+  const names = buildLeaderboard(nielsen, raw, "viewers").ranked.map((r) => r.fullName);
+  assert.deepEqual(names, ["WWE Raw", "WWE SmackDown", "WWE NXT", "AEW Dynamite", "AEW Collision", "TNA iMPACT"]);
+});
+
 test("only Raw is footnoted", () => {
   const board = buildLeaderboard(nielsen, raw, "viewers");
   assert.deepEqual(board.ranked.filter((r) => r.footnoted).map((r) => r.id), ["raw"]);

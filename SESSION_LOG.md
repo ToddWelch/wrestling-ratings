@@ -2,6 +2,17 @@
 
 Newest first. Never delete entries.
 
+## 2026-11-05 (later): Leaderboard centered, company names
+
+Todd: "Center leaderboard. Put company name at from WWE and AEW for their shows."
+
+### Done
+- **Centered:** the whole block (heading, list, footnote) sits in a centered 640 px column.
+- **Names on the Leaderboard:** WWE SmackDown, WWE NXT, AEW Dynamite, AEW Collision (new `fullName` in `shows.js`). Decided, overridable: the hover list and toggle buttons keep the short names, because the request was about the Leaderboard.
+- **Name font** shrinks slightly below about 375 px (`clamp(13px, 4vw, 15px)`).
+- **Checked on the preview with headless Chromium:** equal left and right space at 1920, 1440, 1024, 390, 360 and 320 px, no names cut off at 360 px and up.
+- **Residual:** at 320 px "WWE SmackDown" clips by a few characters in this box's fallback font, which is wider than real phone fonts. The page's 21 px sideways scroll at 320 px is older (footer domain text, `App.jsx`).
+
 ## 2026-11-05: Raw ranks by its number, on the chart and the Leaderboard
 
 Todd: "Put Raw on the list just with an astreks", then "Ranked on chart and ranking at top". This reverses his 2026-10-31 Raw-last tooltip choice (PR #4) and the "listed under it, not ranked" leaderboard line.
