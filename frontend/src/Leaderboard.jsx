@@ -22,14 +22,14 @@ export default function Leaderboard({ board, metric }) {
   const rows = [...board.ranked, ...board.unranked];
 
   return (
-    <section style={{ padding: "16px 12px 4px" }}>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 8, paddingLeft: 8, flexWrap: "wrap" }}>
+    <section style={{ maxWidth: 664, margin: "0 auto", boxSizing: "border-box", padding: "16px 12px 4px" }}>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
         <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#e8f5ee" }}>Leaderboard</h2>
         <span style={label}>WEEK OF {fmtDate(board.week).toUpperCase()}</span>
         <span style={label}>&bull; RANKED BY {byDemo ? "18-49 KEY DEMO" : "TOTAL VIEWERS"}</span>
       </div>
 
-      <div style={{ background: "#0c1812", border: "1px solid #1a3a2a", borderRadius: 6, maxWidth: 640 }}>
+      <div style={{ background: "#0c1812", border: "1px solid #1a3a2a", borderRadius: 6 }}>
         <div style={{ ...row, padding: "6px 10px", borderBottom: "1px solid #1a3a2a", ...label }}>
           <span style={rank}>#</span>
           <span style={{ flex: 1, minWidth: 0 }}>SHOW</span>
@@ -44,8 +44,8 @@ export default function Leaderboard({ board, metric }) {
             <span style={{ flex: 1, minWidth: 0 }}>
               <span style={{ display: "flex", alignItems: "center", gap: 7, whiteSpace: "nowrap", minWidth: 0 }}>
                 <span style={{ width: 8, height: 8, borderRadius: "50%", background: r.color, flexShrink: 0 }} />
-                <span style={{ color: "#e8f5ee", fontWeight: 700, fontSize: 15, overflow: "hidden", textOverflow: "ellipsis" }}>
-                  {r.name}{r.footnoted ? "*" : ""}
+                <span style={{ color: "#e8f5ee", fontWeight: 700, fontSize: "clamp(13px, 4vw, 15px)", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {r.fullName}{r.footnoted ? "*" : ""}
                 </span>
               </span>
               <span style={{ display: "block", fontSize: 12, color: "#6a9a7a", fontFamily: "monospace", marginTop: 1 }}>
@@ -59,7 +59,7 @@ export default function Leaderboard({ board, metric }) {
       </div>
 
       {rows.some((r) => r.footnoted) && (
-        <div style={{ marginTop: 6, fontSize: 12, color: "#8acca0", fontFamily: "monospace", maxWidth: 640 }}>
+        <div style={{ marginTop: 6, fontSize: 12, color: "#8acca0", fontFamily: "monospace", textAlign: "center" }}>
           * WWE Raw uses Netflix global views, not Nielsen. Not directly comparable to cable ratings.
         </div>
       )}

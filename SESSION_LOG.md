@@ -2,6 +2,17 @@
 
 Newest first. Never delete entries.
 
+## 2026-11-05 (later): Leaderboard centered, company names
+
+Todd: "Center leaderboard. Put company name at from WWE and AEW for their shows."
+
+### Done
+- **Centered:** the whole block (heading, list, footnote) sits in a centered 640 px column.
+- **Names on the Leaderboard:** WWE SmackDown, WWE NXT, AEW Dynamite, AEW Collision (new `fullName` in `shows.js`). Decided, overridable: the hover list and toggle buttons keep the short names, because the request was about the Leaderboard.
+- **Name font** shrinks slightly below about 375 px (`clamp(13px, 4vw, 15px)`).
+- **Checked on the preview with headless Chromium:** equal left and right space at 1920, 1440, 1024, 390, 360 and 320 px, no names cut off at 360 px and up.
+- **Residual:** at 320 px "WWE SmackDown" clips by a few characters in this box's fallback font, which is wider than real phone fonts. The page's 21 px sideways scroll at 320 px is older (footer domain text, `App.jsx`).
+
 ## 2026-11-05: Raw ranks by its number, on the chart and the Leaderboard
 
 Todd: "Put Raw on the list just with an astreks", then "Ranked on chart and ranking at top". This reverses his 2026-10-31 Raw-last tooltip choice (PR #4) and the "listed under it, not ranked" leaderboard line.
@@ -14,8 +25,13 @@ Todd: "Put Raw on the list just with an astreks", then "Ranked on chart and rank
 - **Week choice unchanged:** Raw doesn't count toward "latest complete week" because its numbers lag. If it has no number that week, it isn't on the list.
 - 26 frontend tests, passing under UTC and Tokyo time. Preview driven by headless Chromium: 30 of 30 hovers sorted, Raw first in the 27 weeks that have it; 6 rows clean at 320 to 390 px; no page errors, including on altered API data (null viewers, all demos null).
 
+- **Shipped:** PR #5 merged at approved head `3b855d2` as `d6bc234`; deployment `86e87943` SUCCESS, builder DOCKERFILE, live bundle `index-CV56cUiV.js` matches the local build of that head. Crash Override: APPROVED WITH NOTES on `8c6cf40`, then APPROVED on `3b855d2`.
+- **Verified live:** headless Chromium: 30 of 30 hovers sorted, 6 rows clean at 320 to 390 px, correct heading in 4 time zones, no page errors. Todd's real Chrome (the public URL needs no tunnel): Raw* at #1, footnote, tooltip ranked. Touch and iOS Safari remain untested; Todd should glance at it on his phone.
+- **Tool note:** Chrome's screenshot timed out twice right after a hover and reported a possibly frozen renderer. The page was not frozen: tooltips answered, animation frames ran, and the worst stall was 129 ms, with a later screenshot succeeding. Treat it as a tool issue; check the page directly before calling it a site bug.
+- **Behavior to expect:** in a week with no Netflix number (Raw has 6 such gap weeks since 2025), Raw is off the list and the top Nielsen show reads #1.
+
 ### Next
-Merge after review, verify live. Then `CARRY_FORWARD.md` item 1, the on-page SEO fixes, and `/reports/<slug>` pages.
+`CARRY_FORWARD.md` item 1, the on-page SEO fixes, and `/reports/<slug>` pages.
 
 ## 2026-10-29 to 31: Chart fits its data, ranked tooltip, Leaderboard
 
