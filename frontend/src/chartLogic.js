@@ -31,6 +31,15 @@ export function rankPayload(payload) {
   return payload.filter((p) => p.value != null).sort((a, b) => b.value - a.value);
 }
 
+/* ======= VIEWER NUMBERS ======= */
+
+// "1.327M", or "2.5M" for Raw: Netflix publishes one decimal, and three would
+// imply precision it doesn't have. A missing number renders as "n/a".
+export function formatViewers(value, showId) {
+  if (value == null) return "n/a";
+  return `${value.toFixed(showId === RAW_SHOW.id ? 1 : 3)}M`;
+}
+
 /* ======= LEADERBOARD ======= */
 
 // A show that last reported more than this many weeks before the newest data
@@ -69,8 +78,8 @@ function entryInWeek(entries, week) {
 // A show's number for a week can no longer arrive once it has reported a
 // later week, so a week is complete when every active Nielsen show's newest
 // entry falls in that week or later. Shows with no number that week (preempted,
-// "NO DATA") are left out rather than holding the week back. Raw doesn't count
-// toward completeness because its numbers lag; it joins if it has that week.
+// "NO DATA") are left out rather than holding the week back. Raw never moves
+// the week; it joins the list if it has a number for that week.
 //
 // Raw ranks by its number and is marked `footnoted`, since it is Netflix global
 // views, not Nielsen (Todd, 2026-11-05). A row with no number for the metric

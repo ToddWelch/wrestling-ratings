@@ -1,4 +1,5 @@
 import { MO, fmtDate } from "./shows.js";
+import { formatViewers } from "./chartLogic.js";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -16,7 +17,7 @@ const row = { display: "flex", gap: 8, alignItems: "center", padding: "7px 10px"
 
 /* Ranking of the shows for the latest complete week (see buildLeaderboard) */
 export default function Leaderboard({ board, metric }) {
-  if (!board || !board.ranked.length) return null;
+  if (!board) return null;
   const byDemo = metric === "demo";
   const rows = [...board.ranked, ...board.unranked];
 
@@ -37,7 +38,7 @@ export default function Leaderboard({ board, metric }) {
         </div>
         {rows.map((r, i) => (
           <div key={r.id} style={{ ...row, borderBottom: i < rows.length - 1 ? "1px solid #13261b" : "none" }}>
-            <span style={{ ...rank, fontFamily: "monospace", fontWeight: 800, color: i === 0 ? "#4ade80" : "#8acca0" }}>
+            <span style={{ ...rank, fontFamily: "monospace", fontWeight: 800, color: i === 0 && board.ranked.length ? "#4ade80" : "#8acca0" }}>
               {i < board.ranked.length ? i + 1 : "-"}
             </span>
             <span style={{ flex: 1, minWidth: 0 }}>
@@ -51,8 +52,7 @@ export default function Leaderboard({ board, metric }) {
                 {r.network} &bull; {airDay(r.date)}
               </span>
             </span>
-            {/* Netflix publishes Raw to one decimal; three would imply precision it doesn't have */}
-            <span style={{ ...num, color: byDemo ? "#8acca0" : "#e8f5ee" }}>{r.viewers.toFixed(r.footnoted ? 1 : 3)}M</span>
+            <span style={{ ...num, color: byDemo ? "#8acca0" : "#e8f5ee" }}>{formatViewers(r.viewers, r.id)}</span>
             <span style={{ ...num, ...demoCol, color: byDemo ? "#e8f5ee" : "#8acca0" }}>{r.demo != null ? r.demo.toFixed(2) : "n/a"}</span>
           </div>
         ))}

@@ -4,7 +4,7 @@ import {
   ResponsiveContainer, CartesianGrid, ReferenceLine,
 } from "recharts";
 import { NIELSEN_SHOWS, RAW_SHOW, STREAMING_SHOWS, MO, fmtDate, toTs, weekOf } from "./shows.js";
-import { yAxisScale, rankPayload, buildLeaderboard } from "./chartLogic.js";
+import { yAxisScale, rankPayload, formatViewers, buildLeaderboard } from "./chartLogic.js";
 import Leaderboard from "./Leaderboard.jsx";
 
 /* ======= HELPERS ======= */
@@ -129,7 +129,7 @@ function Tip({ active, payload, label, metric }) {
           <span style={{ width: 8, height: 8, borderRadius: "50%", background: p.color, flexShrink: 0 }} />
           <span style={{ color: "#8acca0", flex: 1 }}>{p.name}</span>
           <span style={{ color: "#e8f5ee", fontWeight: 700 }}>
-            {metric === "demo" ? p.value.toFixed(2) : p.value.toFixed(3) + "M"}
+            {metric === "demo" ? p.value.toFixed(2) : formatViewers(p.value, p.dataKey)}
           </span>
         </div>
       ))}

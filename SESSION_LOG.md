@@ -8,10 +8,11 @@ Todd: "Put Raw on the list just with an astreks", then "Ranked on chart and rank
 
 ### Done
 - **Tooltip:** plain highest-first, so Raw sits wherever its number puts it.
-- **Leaderboard:** Raw is a row with an asterisk, ranked by viewers, shown to one decimal as Netflix publishes it. A footnote under the list uses the chart's existing wording.
+- **Leaderboard:** Raw is a row with an asterisk, ranked by viewers. A footnote under the list uses the chart's existing wording.
+- **Raw decimals:** one decimal in both the tooltip and the Leaderboard, as Netflix publishes it (`formatViewers`). A missing viewers number shows "n/a" instead of crashing the page (Crash Override, review of `8c6cf40`).
 - **Key Demo:** Raw has no number, so it stays on the list at the bottom with a dash for its rank and "n/a". Any show missing a number for the metric gets the same treatment instead of disappearing.
 - **Week choice unchanged:** Raw doesn't count toward "latest complete week" because its numbers lag. If it has no number that week, it isn't on the list.
-- 23 frontend tests in three time zones. Preview driven by headless Chromium: 30 of 30 hovers sorted, Raw first in the 27 weeks that have it; 6 rows clean at 320 to 390 px; no console errors.
+- 26 frontend tests, passing under UTC and Tokyo time. Preview driven by headless Chromium: 30 of 30 hovers sorted, Raw first in the 27 weeks that have it; 6 rows clean at 320 to 390 px; no page errors, including on altered API data (null viewers, all demos null).
 
 ### Next
 Merge after review, verify live. Then `CARRY_FORWARD.md` item 1, the on-page SEO fixes, and `/reports/<slug>` pages.
