@@ -2,6 +2,51 @@
 
 Newest first. Never delete entries.
 
+## 2026-11-05: Raw ranks by its number, on the chart and the Leaderboard
+
+Todd: "Put Raw on the list just with an astreks", then "Ranked on chart and ranking at top". This reverses his 2026-10-31 Raw-last tooltip choice (PR #4) and the "listed under it, not ranked" leaderboard line.
+
+### Done
+- **Tooltip:** plain highest-first, so Raw sits wherever its number puts it.
+- **Leaderboard:** Raw is a row with an asterisk, ranked by viewers. A footnote under the list uses the chart's existing wording.
+- **Raw decimals:** one decimal in both the tooltip and the Leaderboard, as Netflix publishes it (`formatViewers`). A missing viewers number shows "n/a" instead of crashing the page (Crash Override, review of `8c6cf40`).
+- **Key Demo:** Raw has no number, so it stays on the list at the bottom with a dash for its rank and "n/a". Any show missing a number for the metric gets the same treatment instead of disappearing.
+- **Week choice unchanged:** Raw doesn't count toward "latest complete week" because its numbers lag. If it has no number that week, it isn't on the list.
+- 26 frontend tests, passing under UTC and Tokyo time. Preview driven by headless Chromium: 30 of 30 hovers sorted, Raw first in the 27 weeks that have it; 6 rows clean at 320 to 390 px; no page errors, including on altered API data (null viewers, all demos null).
+
+### Next
+Merge after review, verify live. Then `CARRY_FORWARD.md` item 1, the on-page SEO fixes, and `/reports/<slug>` pages.
+
+## 2026-10-29 to 31: Chart fits its data, ranked tooltip, Leaderboard
+
+Todd's requests (2026-10-29): (1) the weekly chart's y-axis top should be the top value rounded up to a whole number (3.9 to 4; 5 or 6 if ever needed), at the same height; (2) sort the hover list highest first; (3) a leaderboard for the latest complete week above Weekly Viewership.
+
+### Done
+1. **PR #3 merged** (`81515af`, reviewed head `0500f52`) and deployed (`73bd5cda`). Details:
+   - **Axis:** the y-axis top is the highest visible value in the range, rounded up (viewers to a whole million, demo to the next 0.1), with half-million gridlines when the top is 2 or less.
+   - **Tooltip:** rows sorted highest first.
+   - **Leaderboard:** above the chart; it shows the latest week every show active in the last 2 weeks has reported, ranked by the selected metric, with Raw listed under it, not ranked.
+   - **Code layout:** logic in `frontend/src/chartLogic.js` (19 tests, `cd frontend && npm test`, Node's built-in runner); show config and dates in `shows.js`.
+2. **Crash Override round 1 (REVISE AND RESUBMIT on `4aa19a8`)** caught a real bug: `weekOf` took the weekday in local time and formatted it in UTC, so anyone east of UTC saw "Week of Oct 11" (a Sunday). That also fixed the same label bug already in the chart. Other fixes in that round:
+   - phone layout from 320 to 390 px;
+   - the active-show window cut from 5 to 2 weeks (one quiet show had kept the board weeks stale in a replay of last year);
+   - tests across five time zones and daylight-saving changes.
+   Round 2 APPROVED `0500f52`.
+3. **PR #4 merged** (`f1eb997`, reviewed head `13c15bb`), deployed (`992e8d18`): Raw goes last in the tooltip, Todd's call 2026-10-31.
+4. **Verified live** with headless Chromium (Playwright from `~/projects/winning-post`). Todd's VS Code tunnel was not forwarding, so there was no interactive browser.
+   - Axis 0 to 4 on 1Y, half steps with Raw off.
+   - Tooltip sorted, Raw last.
+   - Leaderboard advanced by itself to the **week of Oct 19** when Collision and TNA numbers landed.
+   - Heading correct in New York, Berlin, Tokyo and Sydney.
+   - Phone widths clean, no console errors.
+   - Live bundles match the reviewed builds byte for byte.
+5. No cross-model gate fired: none of the six events, and Crash Override named nothing material unverified.
+
+### State / next
+- Todd should glance at the leaderboard on his phone; touch and iOS Safari were not testable here.
+- New residuals are in `CARRY_FORWARD.md`: leaderboard accessibility, a "not rated this week" line, `App.jsx` size, no CI for frontend tests.
+- Earlier next steps still stand: `CARRY_FORWARD.md` item 1, then the on-page SEO fixes and `/reports/<slug>` pages.
+
 ## 2026-10-29: Railway IaC applied and merged; revive complete
 
 ### Done

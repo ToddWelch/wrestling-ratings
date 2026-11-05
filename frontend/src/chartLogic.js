@@ -26,13 +26,18 @@ export function yAxisScale(rows, keys, metric) {
 /* ======= TOOLTIP ORDER ======= */
 
 // Tooltip rows, highest value first, so the order reads as that week's ranking.
-// Raw (Netflix global views) always goes last: a different, larger metric
-// that would otherwise top every week (Todd, 2026-10-31; matches the leaderboard).
+// Raw ranks by its number like every other show (Todd, 2026-11-05).
 export function rankPayload(payload) {
-  const isRaw = (p) => p.dataKey === RAW_SHOW.id;
-  return payload
-    .filter((p) => p.value != null)
-    .sort((a, b) => isRaw(a) - isRaw(b) || b.value - a.value);
+  return payload.filter((p) => p.value != null).sort((a, b) => b.value - a.value);
+}
+
+/* ======= VIEWER NUMBERS ======= */
+
+// "1.327M", or "2.5M" for Raw: Netflix publishes one decimal, and three would
+// imply precision it doesn't have. A missing number renders as "n/a".
+export function formatViewers(value, showId) {
+  if (value == null) return "n/a";
+  return `${value.toFixed(showId === RAW_SHOW.id ? 1 : 3)}M`;
 }
 
 /* ======= LEADERBOARD ======= */
@@ -68,15 +73,17 @@ function entryInWeek(entries, week) {
   return found;
 }
 
-// Rank the Nielsen shows for the latest complete week.
+// Rank the shows for the latest complete week.
 //
 // A show's number for a week can no longer arrive once it has reported a
 // later week, so a week is complete when every active Nielsen show's newest
 // entry falls in that week or later. Shows with no number that week (preempted,
-// "NO DATA") are left out rather than holding the week back.
+// "NO DATA") are left out rather than holding the week back. Raw never moves
+// the week; it joins the list if it has a number for that week.
 //
-// Raw is Netflix global views, a different metric, so it is returned
-// separately and never ranked against the Nielsen shows.
+// Raw ranks by its number and is marked `footnoted`, since it is Netflix global
+// views, not Nielsen (Todd, 2026-11-05). A row with no number for the metric
+// (Raw on the key demo) can't be ranked, so it comes back in `unranked`.
 export function buildLeaderboard(nielsen, raw, metric) {
   const series = NIELSEN_SHOWS
     .map((show) => ({ show, entries: nielsen?.[show.id] || [] }))
@@ -89,16 +96,22 @@ export function buildLeaderboard(nielsen, raw, metric) {
   const active = series.filter((s) => s.newest >= cutoff);
   const week = active.reduce((w, s) => (s.newest < w ? s.newest : w), active[0].newest);
 
-  const ranked = active
+  const rows = active
     .map((s) => {
       const e = entryInWeek(s.entries, week);
       return e ? { ...s.show, date: e.date, viewers: e.viewers, demo: e.demo ?? null } : null;
     })
-    .filter((row) => row && row[metric] != null)
-    .sort((a, b) => b[metric] - a[metric] || b.viewers - a.viewers);
+    .filter(Boolean);
 
   const rawEntry = entryInWeek(raw || [], week);
-  const netflix = rawEntry ? { ...RAW_SHOW, date: rawEntry.date, viewers: rawEntry.viewers } : null;
+  if (rawEntry) {
+    rows.push({ ...RAW_SHOW, date: rawEntry.date, viewers: rawEntry.viewers, demo: null, footnoted: true });
+  }
 
-  return { week, ranked, netflix };
+  const ranked = rows
+    .filter((row) => row[metric] != null)
+    .sort((a, b) => b[metric] - a[metric] || b.viewers - a.viewers);
+  const unranked = rows.filter((row) => row[metric] == null);
+
+  return { week, ranked, unranked };
 }

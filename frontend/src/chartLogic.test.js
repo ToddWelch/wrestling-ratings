@@ -1,7 +1,7 @@
 // Run with: cd frontend && npm test (Node's built-in test runner, no dependencies)
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { yAxisScale, rankPayload, buildLeaderboard } from "./chartLogic.js";
+import { yAxisScale, rankPayload, formatViewers, buildLeaderboard } from "./chartLogic.js";
 import { weekOf } from "./shows.js";
 
 /* ======= yAxisScale ======= */
@@ -41,7 +41,7 @@ test("no visible data still gives a usable axis", () => {
 
 /* ======= rankPayload ======= */
 
-test("tooltip rows sort highest first, drop empty values, and put Raw last", () => {
+test("tooltip rows sort highest first, Raw included, and drop empty values", () => {
   const payload = [
     { dataKey: "nxt", name: "NXT", value: 0.732 },
     { dataKey: "raw", name: "Raw (Netflix*)", value: 2.5 },
@@ -49,7 +49,15 @@ test("tooltip rows sort highest first, drop empty values, and put Raw last", () 
     { dataKey: "smackdown", name: "SmackDown", value: 1.327 },
     { dataKey: "dynamite", name: "Dynamite", value: 0.715 },
   ];
-  assert.deepEqual(rankPayload(payload).map((p) => p.name), ["SmackDown", "NXT", "Dynamite", "Raw (Netflix*)"]);
+  assert.deepEqual(rankPayload(payload).map((p) => p.name), ["Raw (Netflix*)", "SmackDown", "NXT", "Dynamite"]);
+});
+
+test("Raw sorts below a show with a higher number", () => {
+  const payload = [
+    { dataKey: "raw", name: "Raw (Netflix*)", value: 1.2 },
+    { dataKey: "smackdown", name: "SmackDown", value: 1.327 },
+  ];
+  assert.deepEqual(rankPayload(payload).map((p) => p.name), ["SmackDown", "Raw (Netflix*)"]);
 });
 
 test("demo tooltip keys sort normally (Raw has no demo line)", () => {
@@ -58,6 +66,15 @@ test("demo tooltip keys sort normally (Raw has no demo line)", () => {
     { dataKey: "smackdown_demo", name: "SmackDown", value: 0.32 },
   ];
   assert.deepEqual(rankPayload(payload).map((p) => p.name), ["SmackDown", "NXT"]);
+});
+
+/* ======= formatViewers ======= */
+
+test("viewers show three decimals, Raw one, and a missing number n/a", () => {
+  assert.equal(formatViewers(1.1, "smackdown"), "1.100M");
+  assert.equal(formatViewers(2.5, "raw"), "2.5M");
+  assert.equal(formatViewers(null, "smackdown"), "n/a");
+  assert.equal(formatViewers(undefined, "raw"), "n/a");
 });
 
 /* ======= buildLeaderboard ======= */
@@ -94,9 +111,10 @@ test("leaderboard picks the latest week every active show has reported", () => {
   assert.equal(buildLeaderboard(nielsen, raw, "viewers").week, "2026-10-12");
 });
 
-test("leaderboard ranks by viewers", () => {
+test("leaderboard ranks by viewers, Raw included by its number", () => {
   const board = buildLeaderboard(nielsen, raw, "viewers");
   assert.deepEqual(board.ranked.map((r) => [r.id, r.date, r.viewers]), [
+    ["raw", "2026-10-12", 2.5],
     ["smackdown", "2026-10-16", 1.327],
     ["nxt", "2026-10-13", 0.732],
     ["dynamite", "2026-10-14", 0.715],
@@ -105,15 +123,35 @@ test("leaderboard ranks by viewers", () => {
   ]);
 });
 
-test("leaderboard ranks by demo, ties broken by viewers", () => {
+test("leaderboard ranks by demo, ties broken by viewers, Raw unranked", () => {
   const board = buildLeaderboard(nielsen, raw, "demo");
   assert.deepEqual(board.ranked.map((r) => r.id), ["smackdown", "nxt", "dynamite", "collision", "tna"]);
+  assert.deepEqual(board.unranked.map((r) => r.id), ["raw"]);
 });
 
-test("Raw is reported separately and never ranked", () => {
+test("only Raw is footnoted", () => {
   const board = buildLeaderboard(nielsen, raw, "viewers");
-  assert.ok(!board.ranked.some((r) => r.id === "raw"));
-  assert.deepEqual([board.netflix.date, board.netflix.viewers], ["2026-10-12", 2.5]);
+  assert.deepEqual(board.ranked.filter((r) => r.footnoted).map((r) => r.id), ["raw"]);
+  assert.deepEqual(board.unranked, []);
+});
+
+test("Raw sits below a show that beat it", () => {
+  const lowRaw = [{ date: "2026-10-12", viewers: 1.2 }];
+  const ids = buildLeaderboard(nielsen, lowRaw, "viewers").ranked.map((r) => r.id);
+  assert.deepEqual(ids.slice(0, 2), ["smackdown", "raw"]);
+});
+
+test("Raw with no number that week is off the list and does not move the week", () => {
+  const board = buildLeaderboard(nielsen, [{ date: "2026-10-19", viewers: 2.5 }], "viewers");
+  assert.equal(board.week, "2026-10-12");
+  assert.ok(![...board.ranked, ...board.unranked].some((r) => r.id === "raw"));
+});
+
+test("a Nielsen show missing its demo number is listed unranked on the demo", () => {
+  const noDemo = { ...nielsen, tna: [{ date: "2026-10-15", viewers: 0.252 }] };
+  const board = buildLeaderboard(noDemo, raw, "demo");
+  assert.ok(!board.ranked.some((r) => r.id === "tna"));
+  assert.deepEqual(board.unranked.map((r) => r.id), ["tna", "raw"]);
 });
 
 test("a show with no number that week is left out, not waited for", () => {
@@ -134,6 +172,22 @@ test("a show silent for more than 2 weeks does not hold the week back", () => {
   const board = buildLeaderboard(quiet, raw, "viewers");
   assert.equal(board.week, "2026-10-12");
   assert.ok(!board.ranked.some((r) => r.id === "tna"));
+});
+
+test("a show missing its viewers number stays listed, unranked", () => {
+  const noViewers = { ...nielsen, tna: [{ date: "2026-10-15", demo: 0.05 }] };
+  const board = buildLeaderboard(noViewers, raw, "viewers");
+  assert.ok(!board.ranked.some((r) => r.id === "tna"));
+  assert.deepEqual(board.unranked.map((r) => r.id), ["tna"]);
+});
+
+test("every show missing the demo still gives a list, all unranked", () => {
+  const noDemo = Object.fromEntries(Object.entries(nielsen).map(([id, entries]) => [
+    id, entries.map(({ date, viewers }) => ({ date, viewers })),
+  ]));
+  const board = buildLeaderboard(noDemo, raw, "demo");
+  assert.deepEqual(board.ranked, []);
+  assert.equal(board.unranked.length, 6);
 });
 
 /* ======= time zones ======= */
@@ -174,7 +228,7 @@ test("leaderboard week and ranking are the same in every time zone", () => {
     inZone(zone, () => {
       const board = buildLeaderboard(nielsen, raw, "viewers");
       assert.equal(board.week, "2026-10-12", zone);
-      assert.deepEqual(board.ranked.map((r) => r.id), ["smackdown", "nxt", "dynamite", "collision", "tna"], zone);
+      assert.deepEqual(board.ranked.map((r) => r.id), ["raw", "smackdown", "nxt", "dynamite", "collision", "tna"], zone);
     });
   }
 });
