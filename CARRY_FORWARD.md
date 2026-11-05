@@ -63,9 +63,6 @@ Remove an item only when the PR that fixes it merges.
 - **Frontend tests don't run automatically.** No CI, and the Docker build
   doesn't run `npm test` (its `src/**/*.test.js` glob also needs Node 21+,
   while the Docker stage uses node:20).
-- **Streaming-chart tooltip** shares `Tip`, so Raw-last applies there too
-  (harmless now; once ROH has data, ROH would list above Raw). A `rawLast`
-  prop used only on the main chart limits it (PR #4 note).
 
 ## Before ROH (or any YouTube channel) is switched back on
 

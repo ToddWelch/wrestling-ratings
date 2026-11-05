@@ -14,10 +14,11 @@ const num = { fontFamily: "monospace", fontWeight: 700, textAlign: "right", widt
 const demoCol = { width: 40 };
 const row = { display: "flex", gap: 8, alignItems: "center", padding: "7px 10px" };
 
-/* Ranking of the Nielsen shows for the latest complete week (see buildLeaderboard) */
+/* Ranking of the shows for the latest complete week (see buildLeaderboard) */
 export default function Leaderboard({ board, metric }) {
   if (!board || !board.ranked.length) return null;
   const byDemo = metric === "demo";
+  const rows = [...board.ranked, ...board.unranked];
 
   return (
     <section style={{ padding: "16px 12px 4px" }}>
@@ -34,28 +35,32 @@ export default function Leaderboard({ board, metric }) {
           <span style={{ ...num, ...label, fontWeight: 400, letterSpacing: "0.02em" }}>VIEWERS</span>
           <span style={{ ...num, ...demoCol, ...label, fontWeight: 400, letterSpacing: "0.02em" }}>18-49</span>
         </div>
-        {board.ranked.map((r, i) => (
-          <div key={r.id} style={{ ...row, borderBottom: i < board.ranked.length - 1 ? "1px solid #13261b" : "none" }}>
-            <span style={{ ...rank, fontFamily: "monospace", fontWeight: 800, color: i === 0 ? "#4ade80" : "#8acca0" }}>{i + 1}</span>
+        {rows.map((r, i) => (
+          <div key={r.id} style={{ ...row, borderBottom: i < rows.length - 1 ? "1px solid #13261b" : "none" }}>
+            <span style={{ ...rank, fontFamily: "monospace", fontWeight: 800, color: i === 0 ? "#4ade80" : "#8acca0" }}>
+              {i < board.ranked.length ? i + 1 : "-"}
+            </span>
             <span style={{ flex: 1, minWidth: 0 }}>
               <span style={{ display: "flex", alignItems: "center", gap: 7, whiteSpace: "nowrap", minWidth: 0 }}>
                 <span style={{ width: 8, height: 8, borderRadius: "50%", background: r.color, flexShrink: 0 }} />
-                <span style={{ color: "#e8f5ee", fontWeight: 700, fontSize: 15, overflow: "hidden", textOverflow: "ellipsis" }}>{r.name}</span>
+                <span style={{ color: "#e8f5ee", fontWeight: 700, fontSize: 15, overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {r.name}{r.footnoted ? "*" : ""}
+                </span>
               </span>
               <span style={{ display: "block", fontSize: 12, color: "#6a9a7a", fontFamily: "monospace", marginTop: 1 }}>
                 {r.network} &bull; {airDay(r.date)}
               </span>
             </span>
-            <span style={{ ...num, color: byDemo ? "#8acca0" : "#e8f5ee" }}>{r.viewers.toFixed(3)}M</span>
+            {/* Netflix publishes Raw to one decimal; three would imply precision it doesn't have */}
+            <span style={{ ...num, color: byDemo ? "#8acca0" : "#e8f5ee" }}>{r.viewers.toFixed(r.footnoted ? 1 : 3)}M</span>
             <span style={{ ...num, ...demoCol, color: byDemo ? "#e8f5ee" : "#8acca0" }}>{r.demo != null ? r.demo.toFixed(2) : "n/a"}</span>
           </div>
         ))}
       </div>
 
-      {board.netflix && (
+      {rows.some((r) => r.footnoted) && (
         <div style={{ marginTop: 6, fontSize: 12, color: "#8acca0", fontFamily: "monospace", maxWidth: 640 }}>
-          <span style={{ color: board.netflix.color, fontWeight: 700 }}>{board.netflix.name}</span>
-          {" "}({airDay(board.netflix.date)}): {board.netflix.viewers.toFixed(1)}M Netflix global views. Not ranked: a different metric from Nielsen.
+          * WWE Raw uses Netflix global views, not Nielsen. Not directly comparable to cable ratings.
         </div>
       )}
     </section>

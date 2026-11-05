@@ -2,6 +2,20 @@
 
 Newest first. Never delete entries.
 
+## 2026-11-05: Raw ranks by its number, on the chart and the Leaderboard
+
+Todd: "Put Raw on the list just with an astreks", then "Ranked on chart and ranking at top". This reverses his 2026-10-31 Raw-last tooltip choice (PR #4) and the "listed under it, not ranked" leaderboard line.
+
+### Done
+- **Tooltip:** plain highest-first, so Raw sits wherever its number puts it.
+- **Leaderboard:** Raw is a row with an asterisk, ranked by viewers, shown to one decimal as Netflix publishes it. A footnote under the list uses the chart's existing wording.
+- **Key Demo:** Raw has no number, so it stays on the list at the bottom with a dash for its rank and "n/a". Any show missing a number for the metric gets the same treatment instead of disappearing.
+- **Week choice unchanged:** Raw doesn't count toward "latest complete week" because its numbers lag. If it has no number that week, it isn't on the list.
+- 23 frontend tests in three time zones. Preview driven by headless Chromium: 30 of 30 hovers sorted, Raw first in the 27 weeks that have it; 6 rows clean at 320 to 390 px; no console errors.
+
+### Next
+Merge after review, verify live. Then `CARRY_FORWARD.md` item 1, the on-page SEO fixes, and `/reports/<slug>` pages.
+
 ## 2026-10-29 to 31: Chart fits its data, ranked tooltip, Leaderboard
 
 Todd's requests (2026-10-29): (1) the weekly chart's y-axis top should be the top value rounded up to a whole number (3.9 to 4; 5 or 6 if ever needed), at the same height; (2) sort the hover list highest first; (3) a leaderboard for the latest complete week above Weekly Viewership.
