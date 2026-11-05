@@ -12,6 +12,10 @@ Todd: "Center leaderboard. Put company name at from WWE and AEW for their shows.
 - **Name font** shrinks slightly below about 375 px (`clamp(13px, 4vw, 15px)`).
 - **Checked on the preview with headless Chromium:** equal left and right space at 1920, 1440, 1024, 390, 360 and 320 px, no names cut off at 360 px and up.
 - **Residual:** at 320 px "WWE SmackDown" clips by a few characters in this box's fallback font, which is wider than real phone fonts. The page's 21 px sideways scroll at 320 px is older (footer domain text, `App.jsx`).
+- **Shipped:** Crash Override APPROVED `6dd99cb` (PR #6); merged as `a676f3b`; deployment `ebb0359c` SUCCESS, builder DOCKERFILE, live bundle `index-8DrFqM5W.js` matches the local build of that head. Verified live with headless Chromium at all six widths, and in Todd's real Chrome: centered, names correct, no console errors, all 6 lines drawn across the chart once the opening animation finished.
+
+### Next
+`CARRY_FORWARD.md` item 1, the on-page SEO fixes, and `/reports/<slug>` pages. Todd to glance at the Leaderboard on his phone.
 
 ## 2026-11-05: Raw ranks by its number, on the chart and the Leaderboard
 

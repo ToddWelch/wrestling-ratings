@@ -53,8 +53,15 @@ Remove an item only when the PR that fixes it merges.
   week just drops off the leaderboard; a muted "Not rated this week: X" line
   would tell readers it isn't a bug.
 
-## Frontend (from PR #3 and #4 review)
+## Frontend (from PR #3 to #6 review)
 
+- **A new show needs a `fullName`** (PR #6 note): without one, its Leaderboard
+  row shows a dot and no name, with no error. Add a test that every
+  `NIELSEN_SHOWS` entry has one.
+- **Footnote orphan word** (PR #6 note): the centered Leaderboard footnote can
+  wrap with one word alone; `textWrap: "balance"` fixes it.
+- **Leaderboard at 320 px:** "WWE SmackDown" clips by a few characters in wide
+  fallback fonts. Fine in Arial-width fonts and from 344 px up.
 - **A completed week can still change** (PR #3 note 6): if a show airs twice
   in one week (Collision has 3 such weeks), a later airing's number replaces
   the earlier one on the chart and leaderboard.
