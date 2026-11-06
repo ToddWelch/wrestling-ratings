@@ -2,6 +2,43 @@
 
 Newest first. Never delete entries.
 
+## 2026-11-06: Slack alert test and session closeout
+
+Todd: "send ti then close out".
+
+### Completed
+- **Slack alert delivery confirmed.** Sent one test through the real `scheduler._send_alert`, run on this box with production's `SLACK_WEBHOOK_URL` injected by `railway run`. The value was never printed. It reached **#web-app-alerts** at 2026-11-06 03:13:04 UTC, confirmed by reading the channel.
+- **What the test doesn't prove:** the send came from this box, not the production container, and it called the alert function directly. The not-failed to failed trigger is covered by `tests/test_scheduler.py`, not by a real outage.
+- **The test message reads as a failure at a glance.** Its header is the real format, "1/2 scrapers failed"; the source line under it says TEST ONLY, nothing failed.
+- **Session totals since 2026-10-28:** PRs #1 `c520d8d`, #2 `4a25716`, #3 `81515af`, #4 `f1eb997`, #5 `d6bc234`, #6 `a676f3b`, all merged and deployed. Details are in the entries below.
+
+### In progress
+Nothing.
+
+### Current state
+- **Live** at https://wrestlingratings.welchcommercesystems.com on `a676f3b`, deployment `ebb0359c`. Checked 2026-11-06: home page 200, `/api/health` ok, both sources `success` at 03:06:50 UTC.
+- **This entry changed nothing in production:** no deploy, variable or DNS change. The only outward action was the one test message.
+- **Safety-relevant changes from this session, still in force:** production scrapes live sources every 6 hours and rewrites its data file; failure alerts post to #web-app-alerts; the agent's Cloudflare token can now write the `welchcommercesystems.com` zone, with every DNS change still needing Todd's approval.
+- **This branch is pushed but not merged.** `docs/session-log-2026-11-05b` holds this entry and the PR #6 entry. Any merge to `main` redeploys and Todd hasn't approved one, so `main` lacks both until the next change ships. The local checkout stays on this branch, so a session that pulls main here still sees them.
+- **`main` has no server-side protection:** classic protection returns 404, rulesets are empty, and there is no CI. Review and head-matching on PRs #1 to #6 were process only.
+- **Local-only, untracked:** `Screenshot 2026-03-20 125725.png` and `screenshots/`. They date from March 2026, before this session, and were left alone.
+- **Not in git yet:** `/home/todd/.claude/infrastructure-access.md` and `/home/todd/.claude/logs/gate-catches.md`, waiting on the next config snapshot.
+- **Background work:** none running from this session.
+
+### Next
+Branch the next change from `docs/session-log-2026-11-05b` so the log merges with it.
+
+### Open, waiting on Todd
+- Glance at the Leaderboard on a phone; touch and iOS Safari are untested.
+- Edit the SEO drafts in `docs/seo/post-drafts-2026-10.md`. Nothing is published.
+- Go or skip on `docs/seo/on-page-fixes-2026-10.md`.
+- Whether the hover list and show buttons also get company names.
+- Go-ahead for `/reports/<slug>` pages and `CARRY_FORWARD.md` item 1.
+- **January 2027:** add the 2027 page to `URLS` (`CLAUDE.md`, Sources). Surfaced to the advisory session so it can be scheduled.
+
+### Estimate vs actual
+No estimate given. Agent compute time for this alert test and closeout was under 15 minutes.
+
 ## 2026-11-05 (later): Leaderboard centered, company names
 
 Todd: "Center leaderboard. Put company name at from WWE and AEW for their shows."
